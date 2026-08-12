@@ -1,0 +1,18 @@
+{
+  "base_url": "https://api.binance.com",
+  "interval": "1h",
+  "interval_ms": 3600000,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT"
+  ],
+  "years": 5,
+  "page_limit": 1000,
+  "timeout_seconds": 30,
+  "max_retries": 5,
+  "request_delay_seconds": 0.2,
+  "output_dir": "data/raw",
+  "manifest_path": "logs/fetch_manifest.json"
+}

@@ -1,0 +1,10 @@
+.worktrees/
+data/
+logs/
+artifacts/
+.venv/
+data/
+logs/
+artifacts/
+.venv/
+__pycache__/
