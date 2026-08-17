@@ -71,8 +71,17 @@ def split_chronologically(
         raise ValueError("train_fraction and validation_fraction must be between 0 and 1.")
     if train_fraction + validation_fraction >= 1:
         raise ValueError("train_fraction plus validation_fraction must be less than 1.")
-    if "target_up" not in dataset.columns:
-        raise ValueError("Dataset must contain target_up.")
+    missing = sorted({"open_time", "target_up"}.difference(dataset.columns))
+    if missing:
+        raise ValueError(f"Dataset is missing required columns: {', '.join(missing)}")
+    timestamps = pd.to_datetime(dataset["open_time"], utc=True, errors="coerce")
+    if timestamps.isna().any():
+        raise ValueError("open_time contains invalid timestamps.")
+    if timestamps.duplicated().any() or not timestamps.is_monotonic_increasing:
+        raise ValueError("open_time values must be strictly increasing.")
+    numeric = dataset.drop(columns="open_time").apply(pd.to_numeric, errors="coerce")
+    if numeric.isna().any().any() or not np.isfinite(numeric.to_numpy(dtype=float)).all():
+        raise ValueError("Dataset contains missing or non-finite values.")
     n_rows = len(dataset)
     train_end = int(n_rows * train_fraction)
     validation_end = int(n_rows * (train_fraction + validation_fraction))

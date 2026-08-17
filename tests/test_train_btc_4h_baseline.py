@@ -87,6 +87,28 @@ class BaselineTrainingTests(unittest.TestCase):
         self.assertTrue(splits["train"]["open_time"].max() < splits["validation"]["open_time"].min())
         self.assertTrue(splits["validation"]["open_time"].max() < splits["test"]["open_time"].min())
 
+    def test_split_rejects_duplicate_or_unordered_times(self):
+        dataset, _ = load_baseline_dataset(self.data_path, self.manifest_path)
+        duplicate = dataset.copy()
+        duplicate.loc[1, "open_time"] = duplicate.loc[0, "open_time"]
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            split_chronologically(duplicate)
+
+        unordered = dataset.iloc[::-1].copy()
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            split_chronologically(unordered)
+
+    def test_split_rejects_missing_or_non_finite_values(self):
+        dataset, _ = load_baseline_dataset(self.data_path, self.manifest_path)
+        missing_time = dataset.drop(columns="open_time")
+        with self.assertRaisesRegex(ValueError, "open_time"):
+            split_chronologically(missing_time)
+
+        non_finite = dataset.copy()
+        non_finite.loc[0, self.feature_names[0]] = np.inf
+        with self.assertRaisesRegex(ValueError, "non-finite"):
+            split_chronologically(non_finite)
+
 
 if __name__ == "__main__":
     unittest.main()
