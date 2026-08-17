@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import argparse
 import json
+import os
 from pathlib import Path
+import sys
+import tempfile
 
 import numpy as np
 import pandas as pd
@@ -18,6 +22,17 @@ from xgboost import XGBClassifier
 
 EXCLUDED_MODEL_COLUMNS = {"open_time", "future_log_return", "target_up", "is_imputed"}
 REQUIRED_COLUMNS = {"open_time", "future_log_return", "target_up", "is_imputed"}
+MODEL_SETTINGS = {
+    "objective": "binary:logistic",
+    "eval_metric": "logloss",
+    "n_estimators": 200,
+    "max_depth": 4,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "n_jobs": 1,
+    "tree_method": "hist",
+}
 
 
 def _manifest_feature_names(manifest_path: Path) -> tuple[str, ...]:
@@ -138,16 +153,8 @@ def run_baseline(
     test = splits["test"]
 
     model = XGBClassifier(
-        objective="binary:logistic",
-        eval_metric="logloss",
-        n_estimators=200,
-        max_depth=4,
-        learning_rate=0.05,
-        subsample=0.8,
-        colsample_bytree=0.8,
+        **MODEL_SETTINGS,
         random_state=random_state,
-        n_jobs=1,
-        tree_method="hist",
     )
     model.fit(train.loc[:, feature_names], train["target_up"])
 
@@ -176,3 +183,85 @@ def run_baseline(
             },
         },
     }
+
+
+def _split_summary(splits: dict[str, pd.DataFrame]) -> dict[str, dict[str, object]]:
+    return {
+        name: {
+            "count": len(frame),
+            "start": frame["open_time"].iloc[0].isoformat(),
+            "end": frame["open_time"].iloc[-1].isoformat(),
+        }
+        for name, frame in splits.items()
+    }
+
+
+def build_report(
+    dataset: pd.DataFrame,
+    feature_names: tuple[str, ...],
+    data_path: Path,
+    manifest_path: Path,
+    random_state: int,
+) -> dict[str, object]:
+    """Create the serializable report only after a successful training run."""
+    splits = split_chronologically(dataset)
+    result = run_baseline(dataset, feature_names, random_state=random_state)
+    return {
+        "task": "BTCUSDT 4-hour direction classification",
+        "paths": {
+            "data": str(data_path.resolve()),
+            "manifest": str(manifest_path.resolve()),
+        },
+        "feature_names": list(feature_names),
+        "splits": _split_summary(splits),
+        "model_settings": {**MODEL_SETTINGS, "random_state": random_state},
+        **result,
+    }
+
+
+def write_report_atomically(report: dict[str, object], output_path: Path) -> None:
+    """Write a report via a sibling temporary file so failures preserve the old output."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=f".{output_path.name}.", suffix=".tmp", dir=output_path.parent
+    )
+    temporary_path = Path(temporary_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(report, handle, ensure_ascii=False, indent=2, allow_nan=False)
+            handle.write("\n")
+        temporary_path.replace(output_path)
+    except Exception:
+        temporary_path.unlink(missing_ok=True)
+        raise
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Train the BTCUSDT 4-hour XGBoost baseline.")
+    parser.add_argument("--data", type=Path, default=Path("data/features/btc_4h.csv"))
+    parser.add_argument("--manifest", type=Path, default=Path("logs/feature_manifest.json"))
+    parser.add_argument("--output", type=Path, default=Path("logs/baseline_btc_4h.json"))
+    parser.add_argument("--random-state", type=int, default=42)
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    try:
+        dataset, feature_names = load_baseline_dataset(args.data, args.manifest)
+        report = build_report(
+            dataset,
+            feature_names,
+            args.data,
+            args.manifest,
+            args.random_state,
+        )
+        write_report_atomically(report, args.output)
+    except (FileNotFoundError, ValueError, OSError) as exc:
+        print(f"Baseline training failed: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
