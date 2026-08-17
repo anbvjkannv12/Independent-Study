@@ -28,7 +28,7 @@ class BaselineTrainingTests(unittest.TestCase):
         dataset["future_log_return"] = np.linspace(-1.0, 1.0, 20)
         dataset["target_up"] = [index % 2 for index in range(20)]
         dataset["is_imputed"] = 0
-        dataset.iloc[::-1].to_csv(self.data_path, index=False)
+        dataset.to_csv(self.data_path, index=False)
         self.manifest_path.write_text(
             json.dumps({"feature_count": 53, "feature_names": list(self.feature_names)}),
             encoding="utf-8",
@@ -61,6 +61,13 @@ class BaselineTrainingTests(unittest.TestCase):
         dataset.to_csv(self.data_path, index=False)
 
         with self.assertRaisesRegex(ValueError, "unique"):
+            load_baseline_dataset(self.data_path, self.manifest_path)
+
+    def test_loader_rejects_unordered_timestamps(self):
+        dataset = pd.read_csv(self.data_path)
+        dataset.iloc[::-1].to_csv(self.data_path, index=False)
+
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
             load_baseline_dataset(self.data_path, self.manifest_path)
 
     def test_loader_rejects_non_finite_values(self):

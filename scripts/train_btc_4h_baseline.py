@@ -49,7 +49,6 @@ def load_baseline_dataset(data_path: Path, manifest_path: Path) -> tuple[pd.Data
         raise ValueError("open_time contains invalid timestamps.")
     if dataset["open_time"].duplicated().any():
         raise ValueError("open_time values must be unique.")
-    dataset = dataset.sort_values("open_time", kind="mergesort").reset_index(drop=True)
     if not dataset["open_time"].is_monotonic_increasing:
         raise ValueError("open_time values must be strictly increasing.")
 
