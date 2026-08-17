@@ -11,7 +11,11 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from train_btc_4h_baseline import load_baseline_dataset, split_chronologically  # noqa: E402
+import train_btc_4h_baseline as baseline  # noqa: E402
+
+
+load_baseline_dataset = baseline.load_baseline_dataset
+split_chronologically = baseline.split_chronologically
 
 
 class BaselineTrainingTests(unittest.TestCase):
@@ -108,6 +112,37 @@ class BaselineTrainingTests(unittest.TestCase):
         non_finite.loc[0, self.feature_names[0]] = np.inf
         with self.assertRaisesRegex(ValueError, "non-finite"):
             split_chronologically(non_finite)
+
+
+class BaselineEvaluationTests(unittest.TestCase):
+    def setUp(self):
+        self.feature_names = tuple(f"feature_{index}" for index in range(53))
+        timestamps = pd.date_range("2024-01-01", periods=40, freq="4h", tz="UTC")
+        self.dataset = pd.DataFrame({"open_time": timestamps})
+        for index, name in enumerate(self.feature_names):
+            self.dataset[name] = np.arange(40, dtype=float) + index
+        self.dataset["future_log_return"] = np.linspace(-1.0, 1.0, 40)
+        self.dataset["target_up"] = [index % 2 for index in range(40)]
+        self.dataset["is_imputed"] = 0
+
+    def test_metrics_use_probability_for_auc_and_threshold_for_labels(self):
+        result = baseline.evaluate_predictions(pd.Series([0, 1, 1, 0]), np.array([0.1, 0.6, 0.4, 0.8]))
+
+        self.assertEqual(result["confusion_matrix"], [[1, 1], [1, 1]])
+        self.assertAlmostEqual(result["roc_auc"], 0.5)
+
+    def test_baseline_reports_all_up_and_training_majority(self):
+        result = baseline.run_baseline(self.dataset, tuple(self.feature_names))
+
+        self.assertEqual(result["benchmarks"]["all_up"]["validation"]["predicted_class"], 1)
+        self.assertIn("training_majority", result["benchmarks"])
+
+    def test_baseline_rejects_single_class_splits(self):
+        single_class = self.dataset.copy()
+        single_class["target_up"] = 1
+
+        with self.assertRaisesRegex(ValueError, "single target class"):
+            baseline.run_baseline(single_class, self.feature_names)
 
 
 if __name__ == "__main__":

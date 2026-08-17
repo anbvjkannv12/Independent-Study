@@ -5,6 +5,15 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+from xgboost import XGBClassifier
 
 
 EXCLUDED_MODEL_COLUMNS = {"open_time", "future_log_return", "target_up", "is_imputed"}
@@ -96,3 +105,74 @@ def split_chronologically(
         if frame["target_up"].nunique(dropna=False) < 2:
             raise ValueError(f"{name} split contains a single target class.")
     return splits
+
+
+def evaluate_predictions(y_true: pd.Series, probabilities: np.ndarray) -> dict[str, object]:
+    """Evaluate binary probabilities with a fixed 0.5 decision threshold."""
+    labels = (np.asarray(probabilities) >= 0.5).astype(int)
+    return {
+        "accuracy": float(accuracy_score(y_true, labels)),
+        "precision": float(precision_score(y_true, labels, zero_division=0)),
+        "recall": float(recall_score(y_true, labels, zero_division=0)),
+        "f1": float(f1_score(y_true, labels, zero_division=0)),
+        "roc_auc": float(roc_auc_score(y_true, probabilities)),
+        "confusion_matrix": confusion_matrix(y_true, labels, labels=[0, 1]).tolist(),
+    }
+
+
+def _evaluate_constant_baseline(y_true: pd.Series, predicted_class: int) -> dict[str, object]:
+    result = evaluate_predictions(y_true, np.full(len(y_true), predicted_class, dtype=float))
+    result["predicted_class"] = predicted_class
+    return result
+
+
+def run_baseline(
+    dataset: pd.DataFrame,
+    feature_names: tuple[str, ...],
+    random_state: int = 42,
+) -> dict[str, object]:
+    """Train and evaluate the fixed BTC 4h XGBoost baseline chronologically."""
+    splits = split_chronologically(dataset)
+    train = splits["train"]
+    validation = splits["validation"]
+    test = splits["test"]
+
+    model = XGBClassifier(
+        objective="binary:logistic",
+        eval_metric="logloss",
+        n_estimators=200,
+        max_depth=4,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=random_state,
+        n_jobs=1,
+        tree_method="hist",
+    )
+    model.fit(train.loc[:, feature_names], train["target_up"])
+
+    def evaluate_split(frame: pd.DataFrame) -> dict[str, object]:
+        probabilities = model.predict_proba(frame.loc[:, feature_names])[:, 1]
+        return evaluate_predictions(frame["target_up"], probabilities)
+
+    gain_importance = model.get_booster().get_score(importance_type="gain")
+    sorted_gain_importance = dict(sorted(gain_importance.items(), key=lambda item: item[1], reverse=True))
+    training_majority = int(train["target_up"].mode().iat[0])
+
+    return {
+        "model": {
+            "validation": evaluate_split(validation),
+            "test": evaluate_split(test),
+            "gain_importance": sorted_gain_importance,
+        },
+        "benchmarks": {
+            "all_up": {
+                "validation": _evaluate_constant_baseline(validation["target_up"], 1),
+                "test": _evaluate_constant_baseline(test["target_up"], 1),
+            },
+            "training_majority": {
+                "validation": _evaluate_constant_baseline(validation["target_up"], training_majority),
+                "test": _evaluate_constant_baseline(test["target_up"], training_majority),
+            },
+        },
+    }
