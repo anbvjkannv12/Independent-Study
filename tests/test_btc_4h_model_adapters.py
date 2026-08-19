@@ -25,6 +25,7 @@ class ModelAdapterTests(unittest.TestCase):
         self.frame = pd.DataFrame({"open_time": timestamps})
         for index, name in enumerate(self.feature_names):
             self.frame[name] = np.arange(72, dtype=float) + index
+        self.frame["feature_0"] = np.arange(72, dtype=int)
         self.frame["target_up"] = [index % 2 for index in range(72)]
         self.train = self.frame.iloc[:48].copy()
         self.validation = self.frame.iloc[48:60].copy()

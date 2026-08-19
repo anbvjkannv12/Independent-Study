@@ -89,5 +89,19 @@ class ModelComparisonCliTests(unittest.TestCase):
         self.assertEqual(json.loads(self.output_path.read_text(encoding="utf-8")), {"old": True})
 
 
+class ComparisonDocumentationTests(unittest.TestCase):
+    def test_comparison_documentation_and_notebook_are_read_only(self):
+        documentation = (PROJECT_ROOT / "docs" / "btc_4h_model_comparison.md").read_text(
+            encoding="utf-8"
+        )
+        notebook = json.loads(
+            (PROJECT_ROOT / "run" / "03_btc_4h_model_comparison.ipynb").read_text(encoding="utf-8")
+        )
+
+        self.assertIn("train_btc_4h_model_comparison.py", documentation)
+        source = "".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+        self.assertNotIn(".fit(", source)
+
+
 if __name__ == "__main__":
     unittest.main()

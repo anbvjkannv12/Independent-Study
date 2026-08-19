@@ -54,6 +54,7 @@ def _scaled_partition_sequences(
 ) -> tuple[np.ndarray, np.ndarray]:
     history = pd.concat([train.tail(sequence_length - 1), partition], ignore_index=True)
     scaled = history.copy()
+    scaled = scaled.astype({name: float for name in feature_names})
     scaled.loc[:, feature_names] = scaler.transform(history.loc[:, feature_names])
     sequences, targets, _ = make_sequence_samples(scaled, feature_names, sequence_length)
     return sequences, targets
@@ -97,6 +98,7 @@ def _fit_predict_sequence_model(
     _set_seed(settings.seed)
     scaler = StandardScaler().fit(train.loc[:, feature_names])
     train_scaled = train.copy()
+    train_scaled = train_scaled.astype({name: float for name in feature_names})
     train_scaled.loc[:, feature_names] = scaler.transform(train.loc[:, feature_names])
     train_x, train_y, _ = make_sequence_samples(train_scaled, feature_names, settings.sequence_length)
     validation_x, validation_y = _scaled_partition_sequences(
