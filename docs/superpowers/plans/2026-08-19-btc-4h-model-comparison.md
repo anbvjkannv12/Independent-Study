@@ -248,7 +248,7 @@ Expected: FAIL，因 CLI 與 JSON schema 不存在。
 
 - [ ] **Step 3: 實作 runner 與結果 schema**
 
-Add CLI defaults: data `data/features/btc_4h.csv`, manifest `logs/feature_manifest.json`, output `logs/btc_4h_model_comparison.json`, `--fold-count 3`, `--initial-train-rows 24000`, `--validation-rows 4000`, `--test-rows 4000`, and the Task 3 model settings. For each fold, call every model adapter, calibrate and select threshold from validation only, then report test metrics and probability quintiles. Calculate per-model mean and sample standard deviation across fold test metrics. Use a sibling temporary JSON file and `Path.replace()` only after all folds and all models pass.
+Add CLI defaults: data `data/features/btc_4h.csv`, manifest `logs/feature_manifest.json`, output `logs/btc_4h_model_comparison.json`, `--fold-count 3`, `--initial-train-rows 19755`, `--validation-rows 4000`, `--test-rows 4000`, and the Task 3 model settings. These defaults exactly consume the current 43,755-row BTC 4-hour dataset. The CLI test fixture must contain at least 72 rows for its `24 + 3 × (8 + 8)` parameters. For each fold, call every model adapter, calibrate and select threshold from validation only, then report test metrics and probability quintiles. Calculate per-model mean and sample standard deviation across fold test metrics. Use a sibling temporary JSON file and `Path.replace()` only after all folds and all models pass.
 
 - [ ] **Step 4: 驗證 GREEN 狀態**
 
