@@ -52,7 +52,7 @@
 def test_expanding_folds_are_contiguous_and_never_overlap(self):
     folds = build_expanding_folds(self.dataset, 24, 8, 8, 3)
     self.assertEqual([fold.index for fold in folds], [0, 1, 2])
-    self.assertEqual([len(fold.train) for fold in folds], [24, 32, 40])
+    self.assertEqual([len(fold.train) for fold in folds], [24, 40, 56])
     for fold in folds:
         self.assertLess(fold.train.open_time.max(), fold.validation.open_time.min())
         self.assertLess(fold.validation.open_time.max(), fold.test.open_time.min())
