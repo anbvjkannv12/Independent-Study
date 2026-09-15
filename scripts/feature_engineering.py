@@ -136,8 +136,9 @@ def add_features(raw: pd.DataFrame, prediction_horizon: int = 1) -> pd.DataFrame
 
     df["log_volume"] = np.log1p(volume)
     df["volume_change"] = np.log1p(volume) - np.log1p(volume.shift(1))
-    df["trade_intensity"] = df["number_of_trades"] / volume.replace(0, np.nan)
-    df["taker_buy_ratio"] = df["taker_buy_base"] / volume.replace(0, np.nan)
+    positive_volume = volume.gt(0)
+    df["trade_intensity"] = (df["number_of_trades"] / volume).where(positive_volume, 0.0)
+    df["taker_buy_ratio"] = (df["taker_buy_base"] / volume).where(positive_volume, 0.0)
     quote_volume = df["quote_asset_volume"].clip(lower=0)
     df["quote_volume_change"] = np.log1p(quote_volume) - np.log1p(quote_volume.shift(1))
 

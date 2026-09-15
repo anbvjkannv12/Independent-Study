@@ -1,59 +1,27 @@
-# 專題 new (五年)
+# 加密貨幣走勢預測專題
 
-這是一個獨立於原專題的五年加密貨幣資料專案，資料來源為 Binance Spot 公開行情 API。
+這個資料夾已依照專題工作流程整理成資料、程式、notebook、文件、模型輸出與本地依賴幾個區塊。
 
-## 資料範圍
+## 資料夾結構
 
-- 交易對：`BTCUSDT`、`ETHUSDT`、`SOLUSDT`、`XRPUSDT`
-- 週期：`1h`
-- 期間：執行當日往前五年，結束於最新完整小時 K 線
-- 輸出：`data/raw/*_5y.csv`
-- 品質紀錄：`logs/fetch_manifest.json`
+- `data/raw/`：原始加密貨幣 OHLCV CSV 資料。
+- `src/`：可重複執行的 Python 訓練程式。
+- `notebooks/`：探索、模型實驗與週進度 notebook。
+- `docs/`：專題報告與進度紀錄文件。
+- `models/`：模型、指標、validation report 與 manifest 輸出。
+- `deps/`：離線 wheel 與本地 XGBoost runtime。
 
-## 安全說明
+## 常用檔案
 
-本專案使用 Binance 公開 K 線端點，不使用、不讀取也不保存 API key 或 secret。公開歷史行情不需要帳戶權限。你先前貼出的 API key 已暴露，請在 Binance 撤銷並重新建立，不要將新金鑰放入本專案。
+- `src/train_popular_coins.py`：訓練 BTC、ETH、SOL、XRP 的 popular coin 模型。
+- `notebooks/train_popular_coins.ipynb`：從 notebook 重新執行訓練與檢視輸出。
+- `notebooks/week3_naive_xgboost.ipynb`：Week 3 naive baseline 與 XGBoost walk-forward validation。
+- `notebooks/week5_transformer.ipynb`：Week 5 Transformer 分類與回歸 walk-forward 實驗（已保留完整執行輸出）。
+- `notebooks/調整後(預測4,12,24小時)/`：依序比較 XGBoost、LSTM、Transformer 在 4／12／24 小時預測 horizon 的調整實驗。
+- `docs/7_基於機器學習與深度學習之加密貨幣走勢預測與穩定幣脫鉤風險預警系統.docx`：專題文件。
+- `src/train_btc_24h_pytorch_transformer.py`：BTC 24 小時方向分類的 PyTorch Transformer 訓練與 checkpoint 輸出。
+- `docs/btc_24h_pytorch_transformer.md`：PyTorch `.pth`／`.pkl` artifact 的訓練與推論說明。
 
-## 執行方式
+## 路徑備註
 
-從專案根目錄執行：
-
-```powershell
-& "C:\Users\user\專題\.venv-transformer\Scripts\python.exe" scripts\fetch_binance_5y.py --dry-run --config config.json
-& "C:\Users\user\專題\.venv-transformer\Scripts\python.exe" scripts\fetch_binance_5y.py --config config.json
-```
-
-下載程式會逐頁抓取，每頁最多 1000 根 K 線；下載完成後會檢查重複時間、空值、數值欄位與一小時間隔。只有通過驗證的暫存 CSV 才會取代正式輸出。
-
-## 目錄
-
-- `data/raw/`：四個交易對的五年原始 K 線 CSV
-- `scripts/fetch_binance_5y.py`：下載、驗證、重試與 manifest 程式
-- `tests/`：抓取器單元測試
-- `run/`：實際執行的 Jupyter notebook 與執行說明
-- `logs/`：下載狀態與資料品質摘要
-- `agement.md`：五年研究範圍與工作說明
-- `時程.md`：資料、模型與驗證安排
-
-## 研究銜接
-
-資料品質確認後，才將 `data/raw/` 接到原專題的特徵工程與模型流程。原專題檔案不在本專案內，也不會被此下載器修改。
-## 資料品質檢查
-
-下載完成後，可執行以下指令檢查 CSV 的欄位、時間排序、重複資料、OHLCV 合理性，以及 CSV 與 manifest 是否一致：
-
-```powershell
-C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe scripts\check_data_quality.py --config config.json --manifest logs\fetch_manifest.json --report logs\data_quality_report.json
-```
-
-檢查結果會寫入 `logs/data_quality_report.json`。已知的時間缺口會列為警告，正常模式仍會回傳成功；若要讓任何警告都使指令失敗，可加上 `--fail-on-warnings`。
-
-## 資料缺口補值
-
-原始資料保留在 `data/raw/`，訓練用的連續資料會輸出到 `data/processed/`。缺少的 1 小時 K 線會用上一根 K 線的 `close` 補價格欄位，成交量相關欄位補 `0`，並用 `is_imputed` 標記是否為補值列。
-
-```powershell
-C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe scripts\impute_missing_klines.py --config config.json
-```
-
-補值摘要會寫到 `logs/imputation_manifest.json`。
+Notebook 內的資料路徑已改成從 `notebooks/` 出發，例如 `../data/raw/btc_3y.csv`。`src/train_popular_coins.py` 則會自動從專題根目錄尋找 `data/raw/` 和 `models/`。

@@ -39,10 +39,12 @@ class ModelComparisonCliTests(unittest.TestCase):
     def tearDown(self):
         self.temp_dir.cleanup()
 
-    def _command(self, data_path: Path) -> list[str]:
+    def _command(self, data_path: Path, symbol: str = "BTC") -> list[str]:
         return [
             sys.executable,
             str(SCRIPT_PATH),
+            "--symbol",
+            symbol,
             "--data",
             str(data_path),
             "--manifest",
@@ -79,6 +81,15 @@ class ModelComparisonCliTests(unittest.TestCase):
         self.assertEqual(set(report["models"]), {"xgboost", "lstm", "transformer"})
         self.assertEqual(len(report["folds"]), 3)
         self.assertEqual(set(report["baselines"]), {"all_up", "training_majority", "previous_direction", "logistic_regression", "zero_trade"})
+
+    def test_cli_labels_non_btc_report_with_requested_symbol(self):
+        completed = subprocess.run(
+            self._command(self.data_path, symbol="ETH"), capture_output=True, text=True
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(self.output_path.read_text(encoding="utf-8"))
+        self.assertEqual(report["task"], "ETHUSDT 4-hour walk-forward model comparison")
 
     def test_cli_preserves_existing_output_if_one_model_fails(self):
         self.output_path.write_text('{"old": true}', encoding="utf-8")

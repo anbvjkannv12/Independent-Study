@@ -153,7 +153,8 @@ def write_report_atomically(report: dict[str, object], output_path: Path) -> Non
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Compare BTCUSDT 4-hour direction models.")
+    parser = argparse.ArgumentParser(description="Compare 4-hour direction models for a supported USDT pair.")
+    parser.add_argument("--symbol", choices=("BTC", "ETH", "SOL", "XRP"), default="BTC")
     parser.add_argument("--data", type=Path, default=Path("data/features/btc_4h.csv"))
     parser.add_argument("--manifest", type=Path, default=Path("logs/feature_manifest.json"))
     parser.add_argument("--output", type=Path, default=Path("logs/btc_4h_model_comparison.json"))
@@ -196,7 +197,7 @@ def main() -> int:
             settings,
         )
         report = {
-            "task": "BTCUSDT 4-hour walk-forward model comparison",
+            "task": f"{args.symbol}USDT 4-hour walk-forward model comparison",
             "paths": {"data": str(args.data.resolve()), "manifest": str(args.manifest.resolve())},
             "feature_names": list(feature_names),
             "fold_settings": {

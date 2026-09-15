@@ -74,6 +74,22 @@ class FeatureEngineeringTests(unittest.TestCase):
         )
         self.assertEqual(int(output["is_imputed"].sum()), 1)
 
+    def test_zero_volume_imputed_row_is_retained_with_zero_activity_features(self):
+        raw = make_raw_frame()
+        timestamp = pd.Timestamp("2024-01-02 15:00:00", tz="UTC")
+        imputed = raw["open_time"] == timestamp
+        raw["is_imputed"] = 0
+        raw.loc[imputed, "is_imputed"] = 1
+        raw.loc[imputed, ["volume", "quote_asset_volume", "number_of_trades", "taker_buy_base", "taker_buy_quote"]] = 0.0
+
+        output = build_feature_dataset(raw, prediction_horizon=1)
+
+        self.assertIn(timestamp, output["open_time"].tolist())
+        row = output.loc[output["open_time"] == timestamp].iloc[0]
+        self.assertEqual(row["is_imputed"], 1)
+        self.assertEqual(row["trade_intensity"], 0.0)
+        self.assertEqual(row["taker_buy_ratio"], 0.0)
+
     def test_missing_required_column_is_rejected(self):
         raw = make_raw_frame().drop(columns="close")
 
