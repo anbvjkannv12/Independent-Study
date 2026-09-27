@@ -63,6 +63,8 @@ target_up = log(close[t+h] / close[t]) > 0
 2. 1h 只作觀察中的候選，不投入調參或深度學習。
 3. 報告補充：「XGB−persistence」差值會高估 XGB 的優勢，應補上對反向 persistence 的比較，或註明 persistence AUC < 0.5 代表短期反轉。
 
-## 七、尚未完成的檢查
+## 七、輸出驗證（已完成，2026-09-28）
 
-`/validate-data` 在中途中斷，尚未重新計算 AUC、檢查 purge 切分，也尚未確認 persistence 基準沒有用到未來資料。
+`python scripts/verify_multi_horizon_outputs.py` 的 V1～V8 全部 PASS；另外完整單元測試 80 項通過。驗證程式獨立以 processed 收盤價重算標籤、以預測 CSV 重算 AUC、檢查 24 列 purge、截斷資料測試 persistence，以及重算 Holm 校正。完整紀錄：`logs/multi_horizon/verification.json`（不進 git）；驗證程式 commit 見 `git log -- scripts/verify_multi_horizon_outputs.py`。
+
+特徵檔缺口影響 test 中 persistence rolling 視窗的最大值為 SOL 24h fold 2 的 24/4,000（0.6%），沒有任何 fold 超過 1%；此基準不參與正式判定。Bootstrap 2,000 次時最小單尾 p 為 1/2001，16 格 Holm 校正後最小為 16/2001 ≈ 0.007996；BTC 1h、BTC 4h、ETH 1h、ETH 12h、XRP 1h 五格達到這個下限，屬於重抽次數限制而非計算錯誤。
