@@ -48,26 +48,31 @@ def build_expanding_folds(
     validation_rows: int,
     test_rows: int,
     fold_count: int,
+    purge_rows: int = 0,
 ) -> list[WalkForwardFold]:
-    """Return contiguous expanding-window folds without future-data overlap."""
+    """Return expanding-window folds, excluding boundary rows when requested."""
     values = (initial_train_rows, validation_rows, test_rows, fold_count)
+    if not isinstance(purge_rows, int) or purge_rows < 0:
+        raise ValueError("purge_rows must be a nonnegative integer")
     if any(not isinstance(value, int) or value < 1 for value in values):
         raise ValueError("fold sizes and fold_count must be positive integers")
-    required_rows = initial_train_rows + fold_count * (validation_rows + test_rows)
+    required_rows = initial_train_rows + fold_count * (validation_rows + test_rows + 2 * purge_rows)
     if len(dataset) < required_rows:
         raise ValueError("not enough rows for requested walk-forward folds")
 
     _validate_partition("dataset", dataset)
     folds: list[WalkForwardFold] = []
     for index in range(fold_count):
-        train_end = initial_train_rows + index * (validation_rows + test_rows)
-        validation_end = train_end + validation_rows
-        test_end = validation_end + test_rows
+        train_end = initial_train_rows + index * (validation_rows + test_rows + 2 * purge_rows)
+        validation_start = train_end + purge_rows
+        validation_end = validation_start + validation_rows
+        test_start = validation_end + purge_rows
+        test_end = test_start + test_rows
         fold = WalkForwardFold(
             index=index,
             train=dataset.iloc[:train_end].copy(),
-            validation=dataset.iloc[train_end:validation_end].copy(),
-            test=dataset.iloc[validation_end:test_end].copy(),
+            validation=dataset.iloc[validation_start:validation_end].copy(),
+            test=dataset.iloc[test_start:test_end].copy(),
         )
         _validate_partition(f"fold {index} train", fold.train)
         _validate_partition(f"fold {index} validation", fold.validation)

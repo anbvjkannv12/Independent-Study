@@ -11,6 +11,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
+from scipy.stats import rankdata
 
 from btc_4h_evaluation import (
     WalkForwardFold,
@@ -169,8 +170,10 @@ def run_xgboost_arm(
     )
 
 
-def _validate_paired_predictions(a: pd.DataFrame, b: pd.DataFrame) -> None:
-    keys = ["fold", "open_time", "target_up"]
+def _validate_paired_predictions(
+    a: pd.DataFrame, b: pd.DataFrame, allow_different_targets: bool = False
+) -> None:
+    keys = ["fold", "open_time"] if allow_different_targets else ["fold", "open_time", "target_up"]
     if len(a) != len(b) or not a.loc[:, keys].reset_index(drop=True).equals(
         b.loc[:, keys].reset_index(drop=True)
     ):
@@ -192,8 +195,10 @@ def moving_block_bootstrap_deltas(
     block_length: int,
     replicates: int,
     seed: int,
+    allow_different_targets: bool = False,
+    score_columns: tuple[str, ...] = ("test_raw",),
 ) -> np.ndarray:
-    _validate_paired_predictions(a, b)
+    _validate_paired_predictions(a, b, allow_different_targets)
     if block_length < 1 or replicates < 1:
         raise ValueError("block_length and replicates must be positive")
     rng = np.random.default_rng(seed)
@@ -202,9 +207,17 @@ def moving_block_bootstrap_deltas(
         raise ValueError("every fold must contain at least block_length rows")
 
     target = a["target_up"].to_numpy(dtype=int)
-    raw_a = a["test_raw"].to_numpy(dtype=float)
-    raw_b = b["test_raw"].to_numpy(dtype=float)
+    target_b = b["target_up"].to_numpy(dtype=int)
+    raw_a = a.loc[:, score_columns].to_numpy(dtype=float)
+    raw_b = b.loc[:, score_columns].to_numpy(dtype=float)
     deltas = np.empty(replicates, dtype=float)
+    def sampled_auc(labels: np.ndarray, scores: np.ndarray) -> float:
+        if np.all(scores == scores[0]):
+            return 0.5
+        positives = int(labels.sum())
+        ranks = rankdata(scores, method="average")
+        return float((ranks[labels == 1].sum() - positives * (positives + 1) / 2)
+                     / (positives * (len(labels) - positives)))
     for replicate in range(replicates):
         sampled_parts: list[np.ndarray] = []
         for positions in fold_positions:
@@ -216,11 +229,14 @@ def moving_block_bootstrap_deltas(
             sampled_parts.append(positions[local])
         sampled = np.concatenate(sampled_parts)
         sampled_target = target[sampled]
-        if np.unique(sampled_target).size < 2:
+        sampled_target_b = target_b[sampled]
+        if np.unique(sampled_target).size < 2 or np.unique(sampled_target_b).size < 2:
             raise RuntimeError("bootstrap sample contains a single target class")
-        deltas[replicate] = roc_auc_score(sampled_target, raw_a[sampled]) - roc_auc_score(
-            sampled_target, raw_b[sampled]
-        )
+        deltas[replicate] = float(np.mean([
+            sampled_auc(sampled_target, raw_a[sampled, col])
+            - sampled_auc(sampled_target_b, raw_b[sampled, col])
+            for col in range(len(score_columns))
+        ]))
     return deltas
 
 

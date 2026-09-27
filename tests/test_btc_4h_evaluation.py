@@ -38,6 +38,20 @@ class WalkForwardTests(unittest.TestCase):
             self.assertLess(fold.train.open_time.max(), fold.validation.open_time.min())
             self.assertLess(fold.validation.open_time.max(), fold.test.open_time.min())
 
+    def test_purged_folds_exclude_exact_boundary_rows(self):
+        folds = build_expanding_folds(self.dataset, 18, 6, 6, 3, purge_rows=3)
+        for i, fold in enumerate(folds):
+            self.assertEqual(len(fold.train), 18 + i * 18)
+            self.assertEqual(len(fold.validation), 6)
+            self.assertEqual(len(fold.test), 6)
+            self.assertEqual(fold.validation.feature.iloc[0] - fold.train.feature.iloc[-1], 4)
+            self.assertEqual(fold.test.feature.iloc[0] - fold.validation.feature.iloc[-1], 4)
+        self.assertEqual(folds[-1].test.open_time.iloc[-1], self.dataset.open_time.iloc[-1])
+
+    def test_purge_rejects_invalid_size(self):
+        with self.assertRaisesRegex(ValueError, "purge_rows"):
+            build_expanding_folds(self.dataset, 24, 8, 8, 3, purge_rows=-1)
+
     def test_expanding_folds_reject_insufficient_rows(self):
         with self.assertRaisesRegex(ValueError, "not enough rows"):
             build_expanding_folds(self.dataset.iloc[:71], 24, 8, 8, 3)
