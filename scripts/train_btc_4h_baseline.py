@@ -44,8 +44,9 @@ def _manifest_feature_names(manifest_path: Path) -> tuple[str, ...]:
         raise ValueError(f"Invalid manifest JSON: {manifest_path}") from exc
 
     names = manifest.get("feature_names")
-    if not isinstance(names, list) or len(names) != 53 or not all(isinstance(name, str) for name in names):
-        raise ValueError("Manifest must contain exactly 53 feature_names.")
+    # 53 base features, plus any external on-chain/sentiment/derivatives columns.
+    if not isinstance(names, list) or len(names) < 53 or not all(isinstance(name, str) for name in names):
+        raise ValueError("Manifest must contain at least the 53 base feature_names.")
     if len(set(names)) != len(names):
         raise ValueError("Manifest feature_names must be unique.")
     forbidden = EXCLUDED_MODEL_COLUMNS.intersection(names)

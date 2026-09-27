@@ -1,0 +1,2 @@
+bb08a5bb237965b764e8f60e67df5a4d8af5e92c079114eae1861ad1a91b9c9a *data/features/revisions/2026-09-16/sol_4h.csv
+8d4673ebc6d2f5ab25b3cb979ef90c7c36a3575704e5220065b3df25ef7cae0f *logs/sol_xrp_4h_feature_manifest_2026-09-16.json

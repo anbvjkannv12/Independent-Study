@@ -8,6 +8,8 @@ from typing import Iterable, Mapping
 import numpy as np
 import pandas as pd
 
+from external_features import build_external_features
+
 
 LAGS = (1, 2, 3, 6, 12, 24)
 ROLLING_WINDOWS = (6, 12, 24)
@@ -202,8 +204,33 @@ def _parse_horizons(value: str) -> tuple[int, ...]:
     return horizons
 
 
-def _validate_output(dataset: pd.DataFrame) -> None:
-    expected = ["open_time", *EXPECTED_FEATURE_NAMES, "future_log_return", "target_up", "is_imputed"]
+def attach_external_features(dataset: pd.DataFrame, external_dir: Path, symbol: str) -> tuple[pd.DataFrame, list[str]]:
+    """Join aligned external signals onto a feature dataset and drop uncovered rows.
+
+    Rows outside a source's coverage window are dropped rather than back-filled, so
+    the resulting dataset is shorter than the base one (ETH/SOL/XRP open interest
+    only enters the public archive during 2022).
+    """
+    index = pd.DatetimeIndex(pd.to_datetime(dataset["open_time"], utc=True))
+    external = build_external_features(index, external_dir, symbol).reset_index(drop=True)
+    if external.empty or not len(external.columns):
+        raise ValueError(f"No external signals found for {symbol} in {external_dir}")
+    merged = pd.concat([dataset.reset_index(drop=True), external], axis=1).dropna().reset_index(drop=True)
+    external_names = list(external.columns)
+    ordered = ["open_time", *EXPECTED_FEATURE_NAMES, *external_names, "future_log_return", "target_up", "is_imputed"]
+    return merged[ordered], external_names
+
+
+def _validate_output(dataset: pd.DataFrame, external_names: Iterable[str] = ()) -> None:
+    external_names = list(external_names)
+    expected = [
+        "open_time",
+        *EXPECTED_FEATURE_NAMES,
+        *external_names,
+        "future_log_return",
+        "target_up",
+        "is_imputed",
+    ]
     if list(dataset.columns) != expected:
         raise ValueError("Generated dataset columns do not match the original feature contract.")
     timestamps = pd.to_datetime(dataset["open_time"], utc=True)
@@ -220,12 +247,14 @@ def generate_feature_datasets(
     manifest_path: Path,
     symbols: Iterable[str],
     horizons: Iterable[int] = DEFAULT_HORIZONS,
+    external_dir: Path | None = None,
 ) -> dict[str, object]:
     """Generate all requested datasets and write a manifest after validation."""
     outputs: list[dict[str, object]] = []
     symbols = tuple(symbols)
     horizons = tuple(horizons)
     prepared_outputs: list[tuple[Path, pd.DataFrame]] = []
+    external_by_symbol: dict[str, list[str]] = {}
     for symbol in symbols:
         if symbol not in SYMBOL_FILES:
             raise ValueError(f"Unsupported symbol: {symbol}")
@@ -235,13 +264,18 @@ def generate_feature_datasets(
         raw = pd.read_csv(input_path)
         for horizon in horizons:
             dataset = build_feature_dataset(raw, prediction_horizon=horizon)
-            _validate_output(dataset)
+            external_names: list[str] = []
+            if external_dir is not None:
+                dataset, external_names = attach_external_features(dataset, external_dir, symbol)
+                external_by_symbol[symbol] = external_names
+            _validate_output(dataset, external_names)
             output_path = output_dir / f"{symbol[:-4].lower()}_{horizon}h.csv"
             prepared_outputs.append((output_path, dataset))
             outputs.append(
                 {
                     "symbol": symbol[:-4],
                     "horizon_hours": horizon,
+                    "external_feature_names": external_names,
                     "input_file": str(input_path),
                     "output_file": str(output_path),
                     "row_count": len(dataset),
@@ -271,8 +305,27 @@ def generate_feature_datasets(
         ],
         "datasets": outputs,
     }
+    if external_by_symbol:
+        manifest["external_feature_names"] = {symbol: names for symbol, names in external_by_symbol.items()}
+        manifest["leakage_controls"].extend(
+            [
+                "External series are merged backward-only with an explicit staleness tolerance.",
+                "Daily on-chain and sentiment values carry a one-day publication lag.",
+                "Bars outside a source's coverage window are dropped, never back-filled.",
+            ]
+        )
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    # Per-symbol manifests: the training loader reads one flat feature_names list,
+    # and the external column set differs per symbol.
+    for symbol, names in external_by_symbol.items():
+        per_symbol = dict(manifest)
+        per_symbol["feature_count"] = len(EXPECTED_FEATURE_NAMES) + len(names)
+        per_symbol["feature_names"] = [*EXPECTED_FEATURE_NAMES, *names]
+        per_symbol["datasets"] = [item for item in outputs if item["symbol"] == symbol[:-4]]
+        path = manifest_path.with_name(f"{manifest_path.stem}_{symbol[:-4].lower()}{manifest_path.suffix}")
+        path.write_text(json.dumps(per_symbol, indent=2, ensure_ascii=False), encoding="utf-8")
     return manifest
 
 
@@ -283,6 +336,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-dir", type=Path, default=Path("data/features"))
     parser.add_argument("--manifest", type=Path, default=Path("logs/feature_manifest.json"))
     parser.add_argument("--horizons", default=','.join(map(str, DEFAULT_HORIZONS)))
+    parser.add_argument(
+        "--external-dir",
+        type=Path,
+        default=None,
+        help="Join fetched on-chain/sentiment/derivatives signals from this directory.",
+    )
     return parser
 
 
@@ -296,6 +355,7 @@ def main() -> None:
         manifest_path=args.manifest,
         symbols=symbols,
         horizons=_parse_horizons(args.horizons),
+        external_dir=args.external_dir,
     )
 
 

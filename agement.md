@@ -152,3 +152,19 @@ C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\py
 4. 報告與計畫書中若引用本階段結果，一律使用上述真實數字（ROC-AUC 0.50–0.53），不得以其他章節（如穩定幣模組）的績效數據替代或混用。
 
 **執行方式調整（2026-09-10）**：BTC 已依上述結果選定 **Transformer** 為定案模型，**不再重新訓練**。後續改為「一個幣種一個幣種依序完成」，依序處理 ETH → SOL → XRP，不再四幣種同時並行，目標於 **2026-09-30（10 月前）** 完成全部四幣種之模型定案與結果整理。詳細排程請見 [時程.md](時程.md)。
+
+## 2026-09-16 外部訊號（鏈上／情緒／衍生品）納入資料範圍
+
+原本資料範圍只有 Binance Spot 1 小時 K 線。本次依需求追加三類外部因子，仍以四個幣種、4 小時方向分類為主軸，**不改變本階段目標與排除項目**：
+
+- 鏈上指標：交易所流入／流出、活躍地址數、MVRV（Coin Metrics community API v4，日頻）
+- 市場情緒：Fear & Greed 指數（alternative.me，日頻）；FinBERT／Twitter-RoBERTa 文本情緒為選配，需自備新聞／社群語料（`scripts/score_news_sentiment.py`）
+- 衍生品：資金費率（Binance USDT-M）、未平倉量與多空比（`data.binance.vision` 封存檔）
+
+程式：`scripts/fetch_external_signals.py`（抓取）、`scripts/external_features.py`（對齊與特徵）、`scripts/feature_engineering.py --external-dir`（合併輸出到 `data/features_ext/`）。全部使用免金鑰公開端點，維持不保存 API key 的原則。
+
+資料契約維持不變：`data/features/` 仍是 53 欄特徵；外部欄位只出現在 `data/features_ext/`，且各幣種欄位數不同，訓練時需搭配對應的 `logs/feature_ext_manifest_<幣種>.json`。
+
+防洩漏規則（已寫成測試 `tests/test_external_features.py`）：外部序列一律 backward 對齊、日頻資料加 1 天發布延遲、各來源設過期容忍上限、涵蓋範圍外的 K 棒直接刪除不回填。
+
+已知限制須照實寫入報告：SOL 在 community 版沒有任何鏈上指標、XRP 沒有交易所流量、ETH／SOL／XRP 的未平倉量封存檔約自 2022 年才開始，因此加上外部特徵後資料列數會減少。**是否有效尚未驗證**：必須用同一套 walk-forward 流程，在「有／無外部特徵」的相同資料列上比較 ROC-AUC 才能下結論；文獻中鏈上因子 AUC 0.76 的結果不可直接套用於本專題。

@@ -1,0 +1,2 @@
+d9fe91eb2add309f7ebe49e26b6460fda429f1ceada85e450bf192c01b730cbe *data/features/revisions/2026-09-10/eth_4h.csv
+2ff2ba910ef87403a47652eeda20d5625424b8fa0848c290d3566cf528e054bf *logs/eth_4h_feature_manifest_2026-09-10.json
