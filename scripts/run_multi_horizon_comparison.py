@@ -209,7 +209,7 @@ def render_report(reports: dict[str, dict], args: argparse.Namespace) -> str:
             if item["decision"] == "較 4h 穩定地強":
                 winners.setdefault(h, []).append(symbol)
             lines.append(f"| {symbol} | {h}h | {item['mean_pooled_auc_delta']:.6f} | {', '.join(f'{x:.6f}' for x in item['fold_auc_deltas'])} | {item['epsilon']:.6f} | {item['bootstrap']['adjusted_p_value']:.6f} | {', '.join(f'{x:.6f}' for x in item['bootstrap']['unadjusted_95_percent_two_sided_ci'])} | {item['decision']}{'（可能較弱）' if item['possibly_weaker'] else ''} |")
-    lines += ["", "## 描述性檢查（不參與判定）", "", "各 fold 依序列出 XGBoost AUC（三 seed 平均）、Logistic AUC、persistence AUC、校準 Brier（三 seed 平均）、訓練上漲率常數 Brier、test 上漲率、validation AUC（三 seed 平均）；各項基準與逐 seed 數值見 JSON。"]
+    lines += ["", "## 描述性檢查（不參與判定）", "", "各 fold 依序列出 XGBoost AUC（三 seed 平均）、Logistic AUC、persistence AUC、best-direction persistence = max(p, 1 − p)、校準 Brier（三 seed 平均）、訓練上漲率常數 Brier、test 上漲率、validation AUC（三 seed 平均）；各項基準與逐 seed 數值見 JSON。best-direction persistence 是看過 test 才選方向的描述性上限參考，不能參與判定。"]
     for symbol, report in reports.items():
         for h, item in report["horizons"].items():
             lines.append(f"\n### {symbol} {h}h")
@@ -218,7 +218,9 @@ def render_report(reports: dict[str, dict], args: argparse.Namespace) -> str:
                 base = item["baselines"][i]
                 brier = item["brier_vs_train_constant"][i]
                 xauc = np.mean([a["test"]["uncalibrated_roc_auc"] for a in arms])
-                lines.append(f"- fold {i}: XGB={xauc:.6f}, Logistic={base['logistic_regression']['test']['roc_auc']:.6f}, persistence={base['persistence']['test']['roc_auc']:.6f}, XGB−persistence={xauc-base['persistence']['test']['roc_auc']:.6f}, Brier={np.mean(list(brier['model_brier_by_seed'].values())):.6f} vs constant={brier['constant_brier']:.6f}, up={item['fold_test_up_rates'][i]:.4f}, validation AUC={np.mean([a['validation']['uncalibrated_roc_auc'] for a in arms]):.6f} (test−validation={xauc-np.mean([a['validation']['uncalibrated_roc_auc'] for a in arms]):.6f})")
+                persistence = base['persistence']['test']['roc_auc']
+                best_persistence = max(persistence, 1 - persistence)
+                lines.append(f"- fold {i}: XGB={xauc:.6f}, Logistic={base['logistic_regression']['test']['roc_auc']:.6f}, persistence={persistence:.6f}, XGB−persistence={xauc-persistence:.6f}, best-direction persistence={best_persistence:.6f}, XGB−best-direction persistence={xauc-best_persistence:.6f}, Brier={np.mean(list(brier['model_brier_by_seed'].values())):.6f} vs constant={brier['constant_brier']:.6f}, up={item['fold_test_up_rates'][i]:.4f}, validation AUC={np.mean([a['validation']['uncalibrated_roc_auc'] for a in arms]):.6f} (test−validation={xauc-np.mean([a['validation']['uncalibrated_roc_auc'] for a in arms]):.6f})")
     long_trend = [f"{symbol} {h}h fold {i}" for symbol, report in reports.items()
                   for h in ("12", "24") if h in report["horizons"]
                   for i, base in enumerate(report["horizons"][h]["baselines"])
@@ -226,6 +228,7 @@ def render_report(reports: dict[str, dict], args: argparse.Namespace) -> str:
                               for s in SEEDS]) <= base["persistence"]["test"]["roc_auc"]]
     lines += ["", "長視窗 XGBoost 不勝 persistence 的 folds：" + ("、".join(long_trend) if long_trend else "無") +
               "；這些訊號可能主要來自趨勢延續，不宜解讀為模型學到額外資訊。",
+              "persistence AUC < 0.5 表示該視窗短期反轉；比較 XGB 的額外資訊時應使用 best-direction persistence。這是事後選方向的描述性參考，不可用於判定。",
               "", "新切分重新訓練的 BTC 4h 合併 AUC 約 0.52784；舊 4h 報告的 fold 平均 AUC 約 0.52889（切分及統計方式不同，僅供參考，不參與判定）。",
               "", "## 結論", "", "沒有證據不等於沒有用。"]
     if not winners:

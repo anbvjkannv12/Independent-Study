@@ -96,13 +96,15 @@ v2 結果仍為 20 個組合中 0 個通過全部預定判準；負 ΔAUC 為 10
 
 綜合外部特徵 A/B、特徵消融 v1、特徵消融 v2，目前沒有證據顯示加入外部特徵或移除任一特徵群能穩定改善 4 小時方向分類。三個受控實驗共同指向同一件事：瓶頸更可能在 4h 方向訊號本身太弱，而不是特徵選擇。
 
-## 五、1h／12h／24h 是否需要訓練
+## 五、1h／12h／24h 多視窗比較（已完成）
 
 本輪不訓練 1h／12h／24h，但已列為下一階段主要工作。
 
 理由是目前三個受控實驗都顯示，4h 方向分類的瓶頸在訊號本身太弱，而不在特徵選擇：外部特徵 A/B 沒有證據顯示能穩定改善，v1 消融沒有任何特徵群通過判準，v2 在三 seed 平均、validation 前置關卡與 Holm 校正後仍沒有任何特徵群通過判準。此時繼續微調 4h 特徵組合，不太可能帶來實質突破。
 
 因此，下一階段應把問題改成「同一套嚴格流程下，1h／4h／12h／24h 哪個預測視窗有較穩定的方向訊號」。執行前會先撰寫預先登記文件，固定資料切分、模型、指標、比較規則與停止條件；同時補上 purge 間隔，降低 4 小時標籤在 train／validation／test 邊界重疊造成的洩漏疑慮。完成設計文件後，再開始多視窗實驗。
+
+已於 2026-09-28 完成比較及輸出驗證：1h 四幣種都通過訊號關卡，但只有 XRP 1h 通過「比 4h 穩定地強」的完整判定；12h、24h 沒有任何幣種比 4h 穩定地強。依預先登記，4h 維持主要視窗，1h 僅列為待獨立驗證的候選假說。詳見 [`multi_horizon_conclusions.md`](multi_horizon_conclusions.md)。
 
 ## 六、整體主結論
 
@@ -118,13 +120,19 @@ v2 結果仍為 20 個組合中 0 個通過全部預定判準；負 ΔAUC 為 10
 
 建議順序：
 
-1. **多視窗 1h／4h／12h／24h 比較（預先登記）**：先固定評估規則、加入 purge 間隔，再比較不同預測視窗的方向訊號強度。
+1. **多視窗 1h／4h／12h／24h 比較（預先登記）（已完成，2026-09-28）**：只有 XRP 1h 通過相對 4h 的完整判定，其餘維持原視窗；詳見 [`multi_horizon_conclusions.md`](multi_horizon_conclusions.md)。
 2. **BTC G4 時間特徵獨立驗證**：將 BTC G4 寫成候選假說，等 2026-08-09 之後的新資料累積足夠後，用 v2 流程獨立驗證。
-3. **定期重新訓練 vs 固定模型**：對應 v2 觀察到的 validation→test AUC 衰退，檢查重新訓練頻率是否比調整特徵更有效。
+3. **定期重新訓練 vs 固定模型**：對應 v2 觀察到的 validation→test AUC 衰退，檢查重新訓練頻率是否比調整特徵更有效。（下一項執行，見 [`next_work_plan.md`](next_work_plan.md) 工作 3。）
 4. **三段式目標**：若方向二分類訊號仍偏弱，改為上漲／下跌／不交易，檢查是否能提升可用性。
 5. **交易成本回測**：在模型訊號被確認後，再加入手續費、滑價與持倉限制，避免用弱訊號直接宣稱交易價值。
 
 ## 八、主要文件與產物
+
+- 多視窗預先登記：`docs/superpowers/specs/2026-09-27-multi-horizon-comparison-design.md`
+- 多視窗結果：`docs/multi_horizon_comparison_results.md`
+- 多視窗結論：`docs/multi_horizon_conclusions.md`
+- 多視窗 logs：`logs/multi_horizon/`（不進 git；原始來源 worktree `C:/Users/user/orca/workspaces/專題/multi-horizon-comparison/logs/multi_horizon/`）
+- 多視窗輸出驗證：`logs/multi_horizon/verification.json`（不進 git）
 
 - 本階段報告：`docs/five_year_4h_final_report.md`
 - 四幣種彙整：`docs/multi_asset_4h_model_comparison.md`
