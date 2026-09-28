@@ -1,7 +1,7 @@
 # 三段式目標比較結論
 
 > 日期：2026-09-28  
-> 依據：[`three_class_target_results.md`](three_class_target_results.md)、預先登記 [`superpowers/specs/2026-09-28-three-class-target-design.md`](superpowers/specs/2026-09-28-three-class-target-design.md)
+> 依據：[`three_class_target_results.md`](three_class_target_results.md)、預先登記 [`superpowers/specs/2026-09-28-three-class-target-design.md`](superpowers/specs/2026-09-28-three-class-target-design.md)、v2 勘誤 [`superpowers/specs/2026-09-28-three-class-target-v2-errata.md`](superpowers/specs/2026-09-28-three-class-target-v2-errata.md)
 
 ## 結論摘要
 
@@ -9,9 +9,13 @@
 
 > 沒有證據顯示三段式目標能改善可用性。
 
-三段式模型 T 在扣除固定來回成本 `c = 0.002` 後，四個幣種的每筆交易平均淨報酬皆為負：BTC -0.001779、ETH -0.001712、SOL -0.001550、XRP -0.001829。四個幣種的關卡一 Holm p 值皆為 1.000000，沒有證據顯示 T 本身扣手續費後有正報酬。
+三段式模型 T 在扣除固定來回成本 `c = 0.002` 後，四個幣種的每筆交易平均淨報酬皆為負：BTC -0.001790、ETH -0.001761、SOL -0.001489、XRP -0.001932。四個幣種的關卡一 Holm p 值皆約為 1，沒有證據顯示 T 本身扣手續費後有正報酬。
 
-相對於二分類加信心門檻 B，T 的平均差異 Δ 分別為 BTC -0.000069、ETH +0.000269、SOL +0.000028、XRP +0.000343；沒有任一幣種同時通過逐 fold、Holm 校正與大於 seed 雜訊 ε 的比較關卡。
+相對於二分類加信心門檻 B，T 的平均差異 Δ 分別為 BTC -0.000147、ETH +0.000267、SOL +0.000049、XRP +0.000268；關卡二 Holm p 分別為 0.84、0.32、0.74、0.27，Δ 也都未超過 seed 雜訊 ε。沒有任一幣種通過比較關卡。
+
+## 勘誤說明
+
+原結果（commit `261b7e3`）的比較關卡 bootstrap 只計算 T 與 B 同時交易的列，m 也先逐列平均三個 seed，與預先登記不一致；依 v2 勘誤從既有逐列預測重算（未重新訓練），並補做 B 組 AUC 一致性檢查（四幣種差距皆 ≤ 0.01）與不重疊版本。修正後判定與原結論相同。
 
 ## 依停止條件採取的下一步
 
