@@ -140,6 +140,7 @@ v2 結果仍為 20 個組合中 0 個通過全部預定判準；負 ΔAUC 為 10
 - 三段式目標預先登記：`docs/superpowers/specs/2026-09-28-three-class-target-design.md`
 - 三段式目標結果：`docs/three_class_target_results.md`
 - 三段式目標結論：`docs/three_class_target_conclusions.md`
+- 三段式目標統計勘誤：`docs/superpowers/specs/2026-09-28-three-class-target-v2-errata.md`
 - 三段式目標 logs：`logs/three_class_target/`（不進 git；原始來源 worktree `C:/Users/user/orca/workspaces/專題/three-class-target/logs/three_class_target/`）
 
 - 本階段報告：`docs/five_year_4h_final_report.md`
