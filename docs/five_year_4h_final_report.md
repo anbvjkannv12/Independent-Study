@@ -122,7 +122,7 @@ v2 結果仍為 20 個組合中 0 個通過全部預定判準；負 ΔAUC 為 10
 
 1. **多視窗 1h／4h／12h／24h 比較（預先登記）（已完成，2026-09-28）**：只有 XRP 1h 通過相對 4h 的完整判定，其餘維持原視窗；詳見 [`multi_horizon_conclusions.md`](multi_horizon_conclusions.md)。
 2. **BTC G4 時間特徵獨立驗證**：將 BTC G4 寫成候選假說，等 2026-08-09 之後的新資料累積足夠後，用 v2 流程獨立驗證。
-3. **定期重新訓練 vs 固定模型**：對應 v2 觀察到的 validation→test AUC 衰退，檢查重新訓練頻率是否比調整特徵更有效。（下一項執行，見 [`next_work_plan.md`](next_work_plan.md) 工作 3。）
+3. **定期重新訓練 vs 固定模型**：對應 v2 觀察到的 validation→test AUC 衰退，檢查重新訓練頻率是否比調整特徵更有效。（已完成，2026-09-28）：四幣種 × 三種重訓頻率沒有任何組合通過預定判準，維持現行標準；詳見 [`retrain_frequency_conclusions.md`](retrain_frequency_conclusions.md)。
 4. **三段式目標**：若方向二分類訊號仍偏弱，改為上漲／下跌／不交易，檢查是否能提升可用性。
 5. **交易成本回測**：在模型訊號被確認後，再加入手續費、滑價與持倉限制，避免用弱訊號直接宣稱交易價值。
 
@@ -133,6 +133,10 @@ v2 結果仍為 20 個組合中 0 個通過全部預定判準；負 ΔAUC 為 10
 - 多視窗結論：`docs/multi_horizon_conclusions.md`
 - 多視窗 logs：`logs/multi_horizon/`（不進 git；原始來源 worktree `C:/Users/user/orca/workspaces/專題/multi-horizon-comparison/logs/multi_horizon/`）
 - 多視窗輸出驗證：`logs/multi_horizon/verification.json`（不進 git）
+- 重訓頻率預先登記：`docs/superpowers/specs/2026-09-29-retrain-frequency-design.md`
+- 重訓頻率結果：`docs/retrain_frequency_results.md`
+- 重訓頻率結論：`docs/retrain_frequency_conclusions.md`
+- 重訓頻率 logs：`logs/retrain_frequency/`（不進 git）
 
 - 本階段報告：`docs/five_year_4h_final_report.md`
 - 四幣種彙整：`docs/multi_asset_4h_model_comparison.md`

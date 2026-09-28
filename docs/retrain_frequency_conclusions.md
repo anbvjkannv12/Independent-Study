@@ -1,6 +1,6 @@
 # 4h 重新訓練頻率實驗結論與後續決策
 
-> 依據：[預先登記設計](superpowers/specs/2026-09-29-retrain-frequency-design.md)、[完整結果](retrain_frequency_results.md)。資料與逐列預測見 `logs/retrain_frequency/`（未追蹤，保留於 `C:/Users/user/orca/workspaces/專題/retrain-frequency/`）。
+> 依據：[預先登記設計](superpowers/specs/2026-09-29-retrain-frequency-design.md)、[完整結果](retrain_frequency_results.md)。資料與逐列預測見 `logs/retrain_frequency/`（不進 git；原始來源 worktree `C:/Users/user/orca/workspaces/專題/retrain-frequency/logs/retrain_frequency/`）。
 
 ## 一、結論
 
@@ -23,7 +23,7 @@
 
 ## 三、決策與下一步
 
-沒有任何組通過：不更改訓練窗、不調超參數、不換特徵，也不改重訓頻率來挽救結果。依 [`next_work_plan.md`](next_work_plan.md) 工作 3 停止條件，下一步另寫「三段式目標（上漲／下跌／不交易）」預先登記文件；**在該文件定案前不執行新實驗**。先前 XRP 1h 與 BTC G4 候選仍等 2027 年新資料做獨立驗證。
+沒有任何組通過：不更改訓練窗、不調超參數、不換特徵，也不改重訓頻率來挽救結果。依預先登記設計的停止條件，下一步另寫「三段式目標（上漲／下跌／不交易）」預先登記文件；**在該文件定案前不執行新實驗**。先前 XRP 1h 與 BTC G4 候選仍等 2027 年新資料做獨立驗證。
 
 ## 四、限制
 
