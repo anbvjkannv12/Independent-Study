@@ -18,8 +18,10 @@ from btc_4h_evaluation import build_expanding_folds
 from run_three_class_target_comparison import (
     block_bootstrap_indices,
     fit_predict_xgboost_multiclass,
+    non_overlapping_mean,
     persistence_direction,
     persistence_signal,
+    primary_statistics,
     three_class_labels,
     trade_returns,
     validation_threshold,
@@ -109,6 +111,29 @@ class ThreeClassTargetComparisonTests(unittest.TestCase):
         for fold in folds:
             self.assertEqual(fold.validation.index[0] - fold.train.index[-1] - 1, 24)
             self.assertEqual(fold.test.index[0] - fold.validation.index[-1] - 1, 24)
+
+    def test_m_is_mean_of_per_seed_means(self) -> None:
+        fold = np.zeros(96, dtype=int)
+        seed_a = np.full(96, np.nan); seed_a[0] = 0.010
+        seed_b = np.full(96, np.nan); seed_b[:3] = 0.0
+        stats = primary_statistics([seed_a, seed_b], [seed_b, seed_b], fold, replicates=5, seed=1)
+        self.assertAlmostEqual(stats["m_T"], 0.005)
+
+    def test_comparison_uses_each_arm_own_trades(self) -> None:
+        # T and B never trade on the same row; B is better, so delta < 0 and p must exceed 0.5.
+        fold = np.repeat([0, 1], 96)
+        t_net = np.full(192, np.nan); t_net[::2] = -0.003
+        b_net = np.full(192, np.nan); b_net[1::2] = -0.001
+        stats = primary_statistics([t_net], [b_net], fold, replicates=200, seed=3)
+        self.assertAlmostEqual(stats["delta"], -0.002)
+        np.testing.assert_allclose(stats["fold_delta"], [-0.002, -0.002])
+        self.assertGreater(stats["comparison_bootstrap"]["raw_one_sided_p_value"], 0.5)
+        self.assertGreater(stats["signal_bootstrap"]["raw_one_sided_p_value"], 0.5)
+
+    def test_non_overlapping_rows(self) -> None:
+        frame = pd.DataFrame({"open_time": pd.date_range("2024-01-01", periods=8, freq="h", tz="UTC"),
+                              "net_return": [0.01, 9, 9, 9, 0.03, 9, 9, 9]})
+        self.assertAlmostEqual(non_overlapping_mean([frame]), 0.02)
 
     def test_rejects_non_default_k(self) -> None:
         script = SCRIPTS / "run_three_class_target_comparison.py"

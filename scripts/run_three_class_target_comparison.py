@@ -130,14 +130,83 @@ def block_bootstrap_indices(
     return samples
 
 
-def _bootstrap_mean(values: np.ndarray, fold_lengths: list[int], replicates: int, seed: int) -> np.ndarray:
-    idxs = block_bootstrap_indices([np.empty(n) for n in fold_lengths], BLOCK_LENGTH, replicates, seed)
-    vals = np.asarray(values, dtype=float)
-    out = np.empty(replicates, dtype=float)
-    for i, idx in enumerate(idxs):
-        sample = vals[idx]
-        out[i] = mean_trade_return(sample)
-    return out
+def _seed_average(nets: list[np.ndarray], rows: np.ndarray | None = None) -> float:
+    """Preregistered m: each seed's mean over its own trades, then the mean over seeds."""
+    return float(np.mean([mean_trade_return(g if rows is None else g[rows]) for g in nets]))
+
+
+def primary_statistics(t_nets: list[np.ndarray], b_nets: list[np.ndarray], fold: np.ndarray,
+                       replicates: int = BOOTSTRAP_REPLICATES, seed: int = BOOTSTRAP_SEED) -> dict[str, object]:
+    """Gate statistics per the v2 errata: both gates share one set of paired bootstrap indices."""
+    t_nets = [np.asarray(g, dtype=float) for g in t_nets]
+    b_nets = [np.asarray(g, dtype=float) for g in b_nets]
+    fold = np.asarray(fold)
+    if np.any(np.diff(fold) < 0):
+        raise ValueError("prediction rows must be ordered by fold")
+    fold_ids = list(np.unique(fold))
+    m_t, m_b = _seed_average(t_nets), _seed_average(b_nets)
+    fold_t = [_seed_average(t_nets, fold == f) for f in fold_ids]
+    fold_b = [_seed_average(b_nets, fold == f) for f in fold_ids]
+    lengths = [int(np.count_nonzero(fold == f)) for f in fold_ids]
+    t_boot = np.empty(replicates, dtype=float)
+    d_boot = np.empty(replicates, dtype=float)
+    for i, idx in enumerate(block_bootstrap_indices([np.empty(n) for n in lengths], BLOCK_LENGTH, replicates, seed)):
+        t_boot[i] = _seed_average(t_nets, idx)
+        d_boot[i] = t_boot[i] - _seed_average(b_nets, idx)
+
+    def summary(values: np.ndarray) -> dict[str, object]:
+        return {"raw_one_sided_p_value": float((1 + np.count_nonzero(values <= 0)) / (replicates + 1)),
+                "unadjusted_95_percent_two_sided_ci": [float(x) for x in np.quantile(values, [0.025, 0.975])]}
+
+    return {"m_T": m_t, "m_B": m_b, "delta": m_t - m_b, "fold_m_T": fold_t, "fold_m_B": fold_b,
+            "fold_delta": [a - b for a, b in zip(fold_t, fold_b)],
+            "signal_bootstrap": summary(t_boot), "comparison_bootstrap": summary(d_boot)}
+
+
+def non_overlapping_mean(frames: list[pd.DataFrame]) -> float:
+    """Descriptive m on rows at UTC hours 0, 4, ..., 20 so 4h labels do not overlap."""
+    return _seed_average([f.loc[pd.to_datetime(f.open_time, utc=True).dt.hour % 4 == 0, "net_return"].to_numpy(dtype=float)
+                          for f in frames])
+
+
+def check_binary_auc(symbol: str, binary_auc: float, multi_horizon_json: Path) -> float:
+    """A.13 item 4: B's mean test AUC must stay within 0.01 of the multi-horizon 4h result."""
+    reference = json.loads(multi_horizon_json.read_text(encoding="utf-8"))["symbols"][symbol]["horizons"]["4"]["mean_pooled_auc"]
+    if abs(binary_auc - reference) > 0.01:
+        raise ValueError(f"{symbol} B AUC {binary_auc:.6f} differs from multi-horizon 4h {reference:.6f} by more than 0.01")
+    return float(reference)
+
+
+def analyse_symbol(result: dict[str, object], output_dir: Path, multi_horizon_json: Path) -> dict[str, object]:
+    """Recompute gate statistics and descriptive checks from the saved prediction CSVs."""
+    symbol = str(result["symbol"])
+    t_frames = [pd.read_csv(output_dir / f"T_seed{s}_predictions.csv") for s in SEEDS]
+    b_frames = [pd.read_csv(output_dir / f"B_seed{s}_predictions.csv") for s in SEEDS]
+    p_frame = pd.read_csv(output_dir / "P_predictions.csv")
+    for frame in [*t_frames[1:], *b_frames, p_frame]:
+        if not frame[["fold", "open_time"]].equals(t_frames[0][["fold", "open_time"]]):
+            raise ValueError("T, B, P rows are not paired")
+    arms = result["arms"]
+    t_means = {s: arms["T"]["seeds"][str(s)]["mean_net_return"] for s in SEEDS}
+    b_means = {s: arms["B"]["seeds"][str(s)]["mean_net_return"] for s in SEEDS}
+    counts = [arms[g]["seeds"][str(s)]["trade_count"] for g in ("T", "B") for s in SEEDS]
+    epsilon_t, epsilon_b = _seed_noise(t_means), _seed_noise(b_means)
+    primary = primary_statistics([f.net_return.to_numpy() for f in t_frames],
+                                 [f.net_return.to_numpy() for f in b_frames], t_frames[0].fold.to_numpy())
+    primary.update({"epsilon_T": epsilon_t, "epsilon_B": epsilon_b, "epsilon": max(epsilon_t, epsilon_b),
+                    "valid_trade_counts": min(counts) >= 200})
+    b_auc = float(np.mean([arms["B"]["seeds"][str(s)]["direction_auc"] for s in SEEDS]))
+    result["primary"] = primary
+    result["descriptive"] = {
+        "non_overlapping_m": {"T": non_overlapping_mean(t_frames), "B": non_overlapping_mean(b_frames),
+                              "P": non_overlapping_mean([p_frame])},
+        "direction_auc_mean": {"T": float(np.mean([arms["T"]["seeds"][str(s)]["direction_auc"] for s in SEEDS])), "B": b_auc},
+        "binary_auc_consistency": {"B_mean_auc": b_auc, "multi_horizon_4h_mean_auc": check_binary_auc(symbol, b_auc, multi_horizon_json),
+                                   "tolerance": 0.01},
+    }
+    result["analysis_revision"] = "v2 errata (docs/superpowers/specs/2026-09-28-three-class-target-v2-errata.md)"
+    write_report_atomically(result, output_dir / "three_class_target_comparison.json")
+    return result
 
 
 def _fold_summary(fold: WalkForwardFold) -> dict[str, object]:
@@ -255,7 +324,6 @@ def run_symbol(symbol: str, args: argparse.Namespace) -> dict[str, object]:
     psig = persistence_signal(dataset)
     arms: dict[str, dict[str, object]] = {"T": {"seeds": {}}, "B": {"seeds": {}}, "P": {}}
     test_r_all = np.concatenate([f.test.future_log_return.to_numpy(dtype=float) for f in folds])
-    test_fold_lengths = [len(f.test) for f in folds]
 
     # P baseline once.
     p_frames = []
@@ -308,23 +376,6 @@ def run_symbol(symbol: str, args: argparse.Namespace) -> dict[str, object]:
             "direction_auc": _auc_safe(b_pred.target_up.to_numpy(), b_pred.score.to_numpy()),
             "coverage_curve": _coverage_curve(np.concatenate(val_b_all), np.concatenate(test_b_all), test_r_all)}
 
-    t_means = {s: arms["T"]["seeds"][str(s)]["mean_net_return"] for s in SEEDS}
-    b_means = {s: arms["B"]["seeds"][str(s)]["mean_net_return"] for s in SEEDS}
-    t_counts = [arms["T"]["seeds"][str(s)]["trade_count"] for s in SEEDS]
-    b_counts = [arms["B"]["seeds"][str(s)]["trade_count"] for s in SEEDS]
-    valid_counts = min(t_counts + b_counts) >= 200
-    epsilon_t, epsilon_b = _seed_noise(t_means), _seed_noise(b_means)
-    epsilon = max(epsilon_t, epsilon_b)
-    t_net_mean = np.nanmean([pd.read_csv(output_dir / f"T_seed{s}_predictions.csv").net_return.to_numpy(dtype=float) for s in SEEDS], axis=0)
-    b_net_mean = np.nanmean([pd.read_csv(output_dir / f"B_seed{s}_predictions.csv").net_return.to_numpy(dtype=float) for s in SEEDS], axis=0)
-    t_boot = _bootstrap_mean(t_net_mean, test_fold_lengths, BOOTSTRAP_REPLICATES, BOOTSTRAP_SEED)
-    d_boot = _bootstrap_mean(t_net_mean - b_net_mean, test_fold_lengths, BOOTSTRAP_REPLICATES, BOOTSTRAP_SEED)
-    m_t = mean_trade_return(t_net_mean)
-    m_b = mean_trade_return(b_net_mean)
-    delta = m_t - m_b
-    fold_t = [mean_trade_return(t_net_mean[sum(test_fold_lengths[:i]):sum(test_fold_lengths[:i+1])]) for i in range(3)]
-    fold_b = [mean_trade_return(b_net_mean[sum(test_fold_lengths[:i]):sum(test_fold_lengths[:i+1])]) for i in range(3)]
-    fold_delta = [a - b for a, b in zip(fold_t, fold_b)]
     result = {
         "task": f"{symbol} 4h three-class target comparison",
         "symbol": symbol,
@@ -338,17 +389,9 @@ def run_symbol(symbol: str, args: argparse.Namespace) -> dict[str, object]:
         "folds": [_fold_summary(f) for f in folds],
         "class_proportions": {str(f.index): {"train": _class_proportions(f.train), "validation": _class_proportions(f.validation), "test": _class_proportions(f.test)} for f in folds},
         "arms": arms,
-        "primary": {"m_T": m_t, "m_B": m_b, "delta": delta, "epsilon_T": epsilon_t, "epsilon_B": epsilon_b,
-                    "epsilon": epsilon, "fold_m_T": fold_t, "fold_m_B": fold_b, "fold_delta": fold_delta,
-                    "valid_trade_counts": valid_counts,
-                    "signal_bootstrap": {"raw_one_sided_p_value": float((1 + np.count_nonzero(t_boot <= 0)) / (BOOTSTRAP_REPLICATES + 1)),
-                                         "unadjusted_95_percent_two_sided_ci": [float(x) for x in np.quantile(t_boot, [0.025, 0.975])]},
-                    "comparison_bootstrap": {"raw_one_sided_p_value": float((1 + np.count_nonzero(d_boot <= 0)) / (BOOTSTRAP_REPLICATES + 1)),
-                                             "unadjusted_95_percent_two_sided_ci": [float(x) for x in np.quantile(d_boot, [0.025, 0.975])]}},
         "runtime_seconds": float(time.perf_counter() - start),
     }
-    write_report_atomically(result, output_dir / "three_class_target_comparison.json")
-    return result
+    return analyse_symbol(result, output_dir, args.multi_horizon_json)
 
 
 def aggregate(output_dir: Path, report_path: Path = Path("docs/three_class_target_results.md")) -> dict[str, object]:
@@ -378,7 +421,7 @@ def aggregate(output_dir: Path, report_path: Path = Path("docs/three_class_targe
 
 
 def render_report(summary: dict[str, object]) -> str:
-    lines = ["# 三段式目標比較結果", "", "預先登記：`docs/superpowers/specs/2026-09-28-three-class-target-design.md`。", "", "## 主表", "", "| 幣種 | m_T | m_B | Δ | ε | T trades | B trades | 關卡一 Holm p | 關卡二 Holm p | 判定 |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|"]
+    lines = ["# 三段式目標比較結果", "", "預先登記：`docs/superpowers/specs/2026-09-28-three-class-target-design.md`；統計分析依 v2 勘誤 `docs/superpowers/specs/2026-09-28-three-class-target-v2-errata.md` 修正。m 為各 seed 先算、再取三 seed 平均。", "", "## 主表", "", "| 幣種 | m_T | m_B | Δ | ε | T trades | B trades | 關卡一 Holm p | 關卡二 Holm p | 判定 |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|"]
     for sym, rep in summary["symbols"].items():
         p = rep["primary"]
         t_trades = int(np.mean([rep["arms"]["T"]["seeds"][str(s)]["trade_count"] for s in SEEDS]))
@@ -396,7 +439,28 @@ def render_report(summary: dict[str, object]) -> str:
         for row in rep["arms"]["P"]["coverage_curve"]:
             lines.append(f"| P | {row['q']:.2f} | {row['trade_count']} | {row['trade_ratio']:.4f} | {row['mean_net_return']:.6f} | {row['hit_rate']:.4f} |")
         lines.append("")
-    lines += ["## 三類比例、AUC 與不重疊版本", "", "完整三類比例、T/B 方向 AUC、逐 fold m、95% CI 與所有逐列預測請見 `logs/three_class_target/` JSON 與 CSV。本報告由程式依預先登記產生。", "", "## 限制", "", "- test 期間和先前多個實驗重疊，不是獨立確認。", "- 固定 k = 0.002 讓各幣種的不交易比例不同。", "- 只扣固定手續費，沒有滑價、資金費率、部位上限。", "- 4h 標籤逐小時重疊，交易不是互相獨立。", "- 只測 XGBoost。", ""]
+    lines += ["## 逐 fold m 與 95% CI", "",
+              "| 幣種 | T 逐 fold m（0／1／2） | B 逐 fold m（0／1／2） | 逐 fold Δ（0／1／2） | 關卡一原始 p | m_T 95% CI | 關卡二原始 p | Δ 95% CI |",
+              "|---|---|---|---|---:|---|---:|---|"]
+    fmt = lambda xs: ", ".join(f"{x:.6f}" for x in xs)
+    for sym, rep in summary["symbols"].items():
+        p = rep["primary"]
+        sig, cmp_ = p["signal_bootstrap"], p["comparison_bootstrap"]
+        lines.append(f"| {sym} | {fmt(p['fold_m_T'])} | {fmt(p['fold_m_B'])} | {fmt(p['fold_delta'])} | {sig['raw_one_sided_p_value']:.6f} | "
+                     f"{fmt(sig['unadjusted_95_percent_two_sided_ci'])} | {cmp_['raw_one_sided_p_value']:.6f} | {fmt(cmp_['unadjusted_95_percent_two_sided_ci'])} |")
+    lines += ["", "## 三類比例（下跌／不交易／上漲）", "", "| 幣種 | fold | train | validation | test |", "|---|---:|---|---|---|"]
+    for sym, rep in summary["symbols"].items():
+        for fold, parts in rep["class_proportions"].items():
+            cells = [", ".join(f"{parts[part][k]:.3f}" for k in ("down", "neutral", "up")) for part in ("train", "validation", "test")]
+            lines.append(f"| {sym} | {fold} | " + " | ".join(cells) + " |")
+    lines += ["", "## 方向 AUC、不重疊版本與一致性檢查（描述性）", "",
+              "| 幣種 | T 方向 AUC | B 方向 AUC | 多視窗 4h AUC | 不重疊 m_T | 不重疊 m_B | 不重疊 m_P |", "|---|---:|---:|---:|---:|---:|---:|"]
+    for sym, rep in summary["symbols"].items():
+        d = rep["descriptive"]
+        lines.append(f"| {sym} | {d['direction_auc_mean']['T']:.6f} | {d['direction_auc_mean']['B']:.6f} | "
+                     f"{d['binary_auc_consistency']['multi_horizon_4h_mean_auc']:.6f} | {d['non_overlapping_m']['T']:.6f} | "
+                     f"{d['non_overlapping_m']['B']:.6f} | {d['non_overlapping_m']['P']:.6f} |")
+    lines += ["", "AUC 與 m 皆為三 seed 平均；不重疊版本只取 `open_time` 小時數為 0、4、8、12、16、20 的列。B 方向 AUC 與多視窗 4h 結果差距皆 ≤ 0.01（A.13 第 4 項）。", "", "## 限制", "", "- test 期間和先前多個實驗重疊，不是獨立確認。", "- 固定 k = 0.002 讓各幣種的不交易比例不同。", "- 只扣固定手續費，沒有滑價、資金費率、部位上限。", "- 4h 標籤逐小時重疊，交易不是互相獨立。", "- 只測 XGBoost。", ""]
     return "\n".join(lines)
 
 
@@ -410,7 +474,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=Path("logs/three_class_target"))
     parser.add_argument("--data-dir", type=Path, default=Path("data/features"))
     parser.add_argument("--manifest", type=Path, default=Path("logs/feature_manifest.json"))
+    parser.add_argument("--multi-horizon-json", type=Path, default=Path("logs/multi_horizon/multi_asset_multi_horizon.json"))
     parser.add_argument("--aggregate-only", action="store_true")
+    parser.add_argument("--recompute-from-predictions", action="store_true",
+                        help="recompute statistics from saved prediction CSVs without retraining (v2 errata)")
     return parser.parse_args()
 
 
@@ -421,7 +488,11 @@ def main() -> int:
     if args.k != DEFAULT_K or args.cost != DEFAULT_COST or args.coverage != DEFAULT_COVERAGE:
         print("--k, --cost and --coverage are preregistered fixed defaults", file=sys.stderr); return 2
     try:
-        if not args.aggregate_only:
+        if args.recompute_from_predictions:
+            for sym in args.symbols:
+                path = args.output_dir / sym.lower() / "three_class_target_comparison.json"
+                analyse_symbol(json.loads(path.read_text(encoding="utf-8")), path.parent, args.multi_horizon_json)
+        elif not args.aggregate_only:
             for sym in args.symbols:
                 print(f"Running {sym}...", flush=True)
                 run_symbol(sym, args)
