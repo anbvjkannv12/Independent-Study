@@ -1,7 +1,7 @@
 # 專題交接說明
 
 > 交接日期：2026-09-30  
-> 交接內容：整包壓縮檔 `專題_交接_2026-09-30.zip`（程式碼、git 歷史、資料、實驗結果、模型）  
+> 交接方式：程式碼與文件在 GitHub（https://github.com/anbvjkannv12/Independent-Study），資料、實驗結果與凍結模型在資料壓縮檔 `專題_資料_2026-09-30.zip`（由原作者另外提供）  
 > 建議閱讀順序：本文件 → `docs/final_stage_completion_status.md` → `docs/final_stage_work_plan.md` → `docs/final_project_report.md`
 
 ---
@@ -12,48 +12,56 @@
 
 ---
 
-## 二、拿到壓縮檔之後要做的事
+## 二、取得專案之後要做的事
 
-### 2.1 壓縮檔內容
+### 2.1 專案分成兩部分
 
-| 包含 | 說明 |
+| 部分 | 內容 | 取得方式 |
+|---|---|---|
+| **GitHub repo** | 所有程式碼、文件、報告初稿、圖表、`.ptl` 與小型模型、完整 git 歷史 | `git clone` |
+| **資料壓縮檔** `專題_資料_2026-09-30.zip`（約 667 MB） | `data/`（原始、補值後、特徵、外部、即時更新資料，解壓後約 1.8 GB）、`logs/`（所有實驗結果，約 210 MB）、`models/live/`（凍結與滾動模型）、`data_manifest.json`（每個檔案的 SHA-256） | 原作者另外提供（例如雲端硬碟） |
+
+為什麼分開：`data/`、`logs/`、`models/live/` 合計約 2 GB，放進 git 會讓每次 clone 都要下載，而且這些資料已經定案、不需要版本控制，所以 `.gitignore` 排除了它們。**只 clone 程式碼的話，看不到任何實驗結果，驗證程式也跑不了**，一定要解壓資料壓縮檔。
+
+資料壓縮檔的 SHA-256：`ac842ca418b6312b45c83e78a37a0f5623b881742a47fccddbeffd3ab51600f9`。收到後可以先用 `Get-FileHash 專題_資料_2026-09-30.zip -Algorithm SHA256` 比對，確認檔案沒有傳壞。
+
+資料壓縮檔**不包含 3 年資料階段的任何資料**。
+
+不需要、也不在任何地方提供的東西：
+
+| 項目 | 原因與替代方式 |
 |---|---|
-| 所有程式碼與文件 | 和 git 的 `main` 分支一致 |
-| `.git/` | 完整 git 歷史與所有分支 |
-| `data/` | 原始、補值後、特徵、外部資料、即時更新資料（約 1.8 GB，解壓後） |
-| `logs/` | 所有實驗結果 JSON、逐列預測、驗證紀錄（約 210 MB） |
-| `models/` | 模型，包含 `models/live/` 的凍結模型與 `frozen_manifest.json` |
-| `backup_manifest.json` | `data/features`、`logs`、`models` 每個檔案的 SHA-256 |
-
-| **不包含** | 原因與替代方式 |
-|---|---|
-| `.venv-transformer/`（約 6 GB） | Python 環境綁定原電腦，請依 2.2 重新建立 |
-| `deps/`、`.xgb_deps/`、`.codex_deps/` | 離線安裝用的套件快取，有網路就不需要 |
-| `.claude/` | 原電腦的工具設定與暫存 worktree |
+| Python 虛擬環境（原電腦約 6 GB） | 綁定原電腦，請依 2.2 重新建立 |
+| 離線套件快取（`deps/` 等） | 有網路就不需要 |
 
 ### 2.2 還原步驟（Windows PowerShell）
 
-1. **解壓縮**到任何資料夾，以下假設是 `D:\專題`。路徑可以有中文，但不要有空格。
-2. **安裝 Python 3.12**（原環境是 3.12.14），然後建立虛擬環境：
+1. **clone 專案**到任何資料夾，以下假設是 `D:\專題`。路徑不要有空格：
 
    ```powershell
+   git clone https://github.com/anbvjkannv12/Independent-Study.git D:\專題
    cd D:\專題
+   ```
+
+2. **解壓資料壓縮檔到專案根目錄**。解壓後，專案根目錄會多出 `data/`、`logs/`、`models/live/` 與 `data_manifest.json`：
+
+   ```powershell
+   Expand-Archive -Path <下載位置>\專題_資料_2026-09-30.zip -DestinationPath D:\專題
+   Test-Path data\features\btc_4h.csv, logs\multi_horizon\verification.json, models\live\frozen_manifest.json
+   ```
+
+   三個都應該是 `True`。如果 `Expand-Archive` 遇到中文路徑或大檔案出錯，改用 7-Zip 解壓。
+
+3. **安裝 Python 3.12**（原環境是 3.12.14），然後建立虛擬環境：
+
+   ```powershell
    py -3.12 -m venv .venv-transformer
    .\.venv-transformer\Scripts\python.exe -m pip install -r requirements-lock.txt
    ```
 
    `requirements-lock.txt` 是原電腦的完整套件版本清單（含 torch、xgboost 3.2.0）。
 
-3. **清掉原電腦的 worktree 紀錄**（它們指向原電腦的路徑，在你的電腦上不存在）：
-
-   ```powershell
-   git worktree prune
-   git status
-   ```
-
-   `git status` 應該顯示 working tree clean。
-
-4. **跑完整測試**，應該全部通過（原電腦為 107 項）：
+4. **跑完整測試**，應該全部通過：
 
    ```powershell
    $py = ".\.venv-transformer\Scripts\python.exe"
@@ -66,15 +74,24 @@
    & $py scripts\verify_multi_horizon_outputs.py
    ```
 
-6. **（可選）核對 SHA-256**：從 `backup_manifest.json` 抽幾個檔案，用 `Get-FileHash <檔案> -Algorithm SHA256` 比對。
+6. **（可選）核對 SHA-256**：從 `data_manifest.json` 抽幾個檔案，用 `Get-FileHash <檔案> -Algorithm SHA256` 比對。
 
-如果第 4 或第 5 步失敗，先不要改任何程式，把錯誤訊息記下來。最常見的原因是套件版本不同，或解壓縮不完整。
+如果第 4 或第 5 步失敗，先不要改任何程式，把錯誤訊息記下來。最常見的原因是套件版本不同、資料壓縮檔沒有解壓到專案根目錄，或解壓不完整。
+
+### 2.3 只做前端網站的話
+
+不需要整個專案，只要 `專題_前端資料包_2026-09-30.zip`（約 78 MB，由原作者另外提供），說明見 `docs/frontend_data_guide.md`。
+
+### 2.4 之後修改專案
+
+- 程式碼與文件的修改：開分支、commit、push 到 GitHub，再開 Pull Request 合併到 `main`。
+- **不要把 `data/`、`logs/`、`models/live/` 加進 git**（`.gitignore` 已排除）。資料有新增時，另外打包並更新 `data_manifest.json`。
 
 ---
 
 ## 三、交接清單（東西在哪裡）
 
-壓縮檔內的 `專題/` 資料夾就是原電腦的 `C:\Users\user\專題`。以下路徑都是相對於它。
+以下路徑都是相對於專案根目錄（clone 下來的資料夾）。`data/`、`logs/`、`models/live/` 底下的檔案要先解壓資料壓縮檔才會有。
 
 ### 3.1 報告與結果
 
@@ -206,8 +223,8 @@
 | 報告轉成正式格式 | 未完成 | 把 `docs/final_project_report.md` 依系上範本轉成 Word／PDF；圖用 `docs/figures/`；數字不要手打，從結果文件或 `figure_data.json` 複製 |
 | 報告內容補強 | 待確認 | 決定波動延伸研究要不要寫進報告；若要，務必同時寫第七節第 5 點的限制 |
 | 口試準備 | 大綱已完成 | 依 `docs/final_presentation_outline.md` 做成簡報並練習 |
-| 備份 | 部分完成 | 壓縮檔本身就是一份備份；請再存一份到雲端硬碟 |
-| 遠端 repo | 未設定 | 若要用 GitHub，建 **private** repo 後 push `main`（push 前用 `git grep -n -i "api_key\|secret\|password"` 確認沒有金鑰） |
+| 備份 | 部分完成 | 程式碼在 GitHub；資料壓縮檔請至少存兩個地方（例如雲端硬碟與外接硬碟） |
+| 遠端 repo | 已設定 | https://github.com/anbvjkannv12/Independent-Study |
 | 即時預測展示 | 決定不做 | 需要時見 `final_stage_work_plan.md` 工作 7 |
 | `.ptl` 模型檔（PyTorch Lite） | 已完成 | 見下方 6.1；`max|ptl - pth|=5.96e-08`，batch_vs_single=0 |
 | 前端呈現 | 網站由同學保管 | 資料說明見 `docs/frontend_data_guide.md`（6.2） |
@@ -282,7 +299,7 @@
 不需要重新訓練。多視窗用 `verify_multi_horizon_outputs.py`；三段式用 `run_three_class_target_comparison.py --recompute-from-predictions --multi-horizon-json logs\multi_horizon\multi_asset_multi_horizon.json`，都只讀既有結果。
 
 **Q：文件裡有 `C:\Users\user\...` 或 `C:\Users\user\orca\workspaces\...` 的路徑？**
-那是原電腦的路徑，指的是當時實驗用的工作資料夾。對應的結果都已經收進壓縮檔的 `logs/`，可以忽略這些路徑。
+那是原電腦的路徑，指的是當時實驗用的工作資料夾。對應的結果都已經收進資料壓縮檔的 `logs/`，可以忽略這些路徑。
 
 **Q：報告的圖要改樣式？**
 改 `scripts/make_report_figures.py` 再重新執行，不要直接修改 PNG，也不要手打數字。
