@@ -110,7 +110,9 @@ v2 結果仍為 20 個組合中 0 個通過全部預定判準；負 ΔAUC 為 10
 
 本輪結果顯示，目前 53 個 K 線衍生特徵對未來 4 小時方向只有非常有限的預測訊號。四幣種平均 ROC-AUC 多落在 0.50～0.53，Brier score 也接近二元隨機情境下的 0.25。深度模型沒有穩定勝過 XGBoost，也沒有出現跨幣種、跨 fold 都可靠的優勝模型。
 
-加入外部特徵或移除任何特徵群後，test AUC 仍維持在 0.50～0.53；三輪受控 A/B test 都沒有證據顯示特徵選擇是主要瓶頸。整體判讀是：目前限制主要在 4 小時方向訊號強度，而不是現有特徵群是否保留或外部特徵是否加入。
+加入外部特徵或移除任何特徵群後，test AUC 仍維持在 0.50～0.53；三輪受控 A/B test 都沒有證據顯示特徵選擇是主要瓶頸。後續多視窗比較、重訓頻率與三段式目標也沒有改變主結論：1h 只有 XRP 通過相對 4h 的完整判定，重訓頻率 12 個組合中 0 個通過，三段式在扣 0.2% 來回手續費後四幣種每筆淨報酬皆為負。整體判讀是：目前限制主要在方向訊號強度與經濟價值，而不是現有特徵群是否保留、模型是否足夠複雜、或是否允許不交易。
+
+手續費損益兩平分析也支持這個判讀。若每筆預期毛利近似為 `(2p − 1) × E|r|`，在來回成本 `c = 0.002` 下，所需命中率明顯高於三段式實測約 53% 的水準；因此即使 AUC 略高於 0.5，也不足以支撐交易或獲利宣稱。
 
 因此，本階段成果應定位為：
 
@@ -131,7 +133,7 @@ v2 結果仍為 20 個組合中 0 個通過全部預定判準；負 ΔAUC 為 10
 - 多視窗預先登記：`docs/superpowers/specs/2026-09-27-multi-horizon-comparison-design.md`
 - 多視窗結果：`docs/multi_horizon_comparison_results.md`
 - 多視窗結論：`docs/multi_horizon_conclusions.md`
-- 多視窗 logs：`logs/multi_horizon/`（不進 git；原始來源 worktree `C:/Users/user/orca/workspaces/專題/multi-horizon-comparison/logs/multi_horizon/`）
+- 多視窗 logs：`logs/multi_horizon/`（不進 git；已收回 main logs）
 - 多視窗輸出驗證：`logs/multi_horizon/verification.json`（不進 git）
 - 重訓頻率預先登記：`docs/superpowers/specs/2026-09-29-retrain-frequency-design.md`
 - 重訓頻率結果：`docs/retrain_frequency_results.md`
@@ -141,7 +143,7 @@ v2 結果仍為 20 個組合中 0 個通過全部預定判準；負 ΔAUC 為 10
 - 三段式目標結果：`docs/three_class_target_results.md`
 - 三段式目標結論：`docs/three_class_target_conclusions.md`
 - 三段式目標統計勘誤：`docs/superpowers/specs/2026-09-28-three-class-target-v2-errata.md`
-- 三段式目標 logs：`logs/three_class_target/`（不進 git；原始來源 worktree `C:/Users/user/orca/workspaces/專題/three-class-target/logs/three_class_target/`）
+- 三段式目標 logs：`logs/three_class_target/`（不進 git；已收回 main logs）
 
 - 本階段報告：`docs/five_year_4h_final_report.md`
 - 四幣種彙整：`docs/multi_asset_4h_model_comparison.md`
@@ -158,4 +160,10 @@ v2 結果仍為 20 個組合中 0 個通過全部預定判準；負 ΔAUC 為 10
 - 特徵消融 v1 logs：`logs/ab/`、`logs/ab/multi_asset_feature_ablation.json`
 - 特徵消融 v2 設計：主資料夾 `docs/superpowers/specs/2026-09-26-feature-ab-test-v2-design.md`
 - 特徵消融 v2 彙整與分析：worktree `C:/Users/user/orca/workspaces/專題/feature-ab-test-v2/docs/feature_ab_test_results_v2.md`、`C:/Users/user/orca/workspaces/專題/feature-ab-test-v2/docs/feature_ab_test_v2_analysis.md`
-- 特徵消融 v2 logs：worktree `C:/Users/user/orca/workspaces/專題/feature-ab-test-v2/logs/ab_v2/`、`C:/Users/user/orca/workspaces/專題/feature-ab-test-v2/logs/ab_v2/multi_asset_feature_ablation.json`
+- 特徵消融 v2 logs：`logs/ab_v2/`、`logs/ab_v2/multi_asset_feature_ablation.json`（不進 git；已收回 main logs）
+- 報告圖表：`docs/figures/`、`docs/figures/figure_data.json`
+- 繳交報告初稿：`docs/final_project_report.md`
+- 口試簡報大綱：`docs/final_presentation_outline.md`
+- 延伸研究（波動大小）預先登記：`docs/superpowers/specs/2026-09-30-volatility-target-extension-design.md`
+- 延伸研究（波動大小）結果：`docs/volatility_target_extension_results.md`
+- 延伸研究 logs：`logs/volatility_target/`（不進 git）

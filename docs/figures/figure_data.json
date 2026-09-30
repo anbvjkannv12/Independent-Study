@@ -1,0 +1,1418 @@
+{
+  "F1": {
+    "steps": [
+      "Binance\n1h K 線",
+      "品質檢查",
+      "缺漏補值",
+      "53 個特徵",
+      "Walk-forward\n+ purge",
+      "評估與校正"
+    ],
+    "source": "project pipeline summary"
+  },
+  "F2": {
+    "source": "logs/multi_horizon/multi_asset_multi_horizon.json",
+    "rows": [
+      {
+        "fold": 0,
+        "part": "train",
+        "start": "2021-08-10T11:00:00+00:00",
+        "end": "2023-11-06T09:00:00+00:00"
+      },
+      {
+        "fold": 0,
+        "part": "validation",
+        "start": "2023-11-07T10:00:00+00:00",
+        "end": "2024-04-22T01:00:00+00:00"
+      },
+      {
+        "fold": 0,
+        "part": "test",
+        "start": "2024-04-23T02:00:00+00:00",
+        "end": "2024-10-06T17:00:00+00:00"
+      },
+      {
+        "fold": 1,
+        "part": "train",
+        "start": "2021-08-10T11:00:00+00:00",
+        "end": "2024-10-06T17:00:00+00:00"
+      },
+      {
+        "fold": 1,
+        "part": "validation",
+        "start": "2024-10-07T18:00:00+00:00",
+        "end": "2025-03-23T10:00:00+00:00"
+      },
+      {
+        "fold": 1,
+        "part": "test",
+        "start": "2025-03-24T11:00:00+00:00",
+        "end": "2025-09-07T02:00:00+00:00"
+      },
+      {
+        "fold": 2,
+        "part": "train",
+        "start": "2021-08-10T11:00:00+00:00",
+        "end": "2025-09-07T02:00:00+00:00"
+      },
+      {
+        "fold": 2,
+        "part": "validation",
+        "start": "2025-09-08T03:00:00+00:00",
+        "end": "2026-02-21T18:00:00+00:00"
+      },
+      {
+        "fold": 2,
+        "part": "test",
+        "start": "2026-02-22T19:00:00+00:00",
+        "end": "2026-08-08T10:00:00+00:00"
+      }
+    ]
+  },
+  "F3": {
+    "source": "logs/*_4h_model_comparison.json",
+    "auc": {
+      "BTC": {
+        "xgboost": 0.5288863646002854,
+        "lstm": 0.5302051028497934,
+        "transformer": 0.5318128635286231
+      },
+      "ETH": {
+        "xgboost": 0.5275378130139575,
+        "lstm": 0.522587266944286,
+        "transformer": 0.5260631367320939
+      },
+      "SOL": {
+        "xgboost": 0.5023442169914563,
+        "lstm": 0.5088361802737357,
+        "transformer": 0.5067239670781767
+      },
+      "XRP": {
+        "xgboost": 0.5163667788601137,
+        "lstm": 0.5231450021323724,
+        "transformer": 0.5157318919281442
+      }
+    }
+  },
+  "F4": {
+    "source": "logs/multi_horizon/multi_asset_multi_horizon.json",
+    "auc": {
+      "BTC": {
+        "1": 0.5423651713739079,
+        "4": 0.5278377686817165,
+        "12": 0.5249875285048671,
+        "24": 0.5197258395574401
+      },
+      "ETH": {
+        "1": 0.537145853879531,
+        "4": 0.5225960994452628,
+        "12": 0.5388226679698181,
+        "24": 0.5377649196360273
+      },
+      "SOL": {
+        "1": 0.5161255600169379,
+        "4": 0.5004071880807449,
+        "12": 0.49983890665116365,
+        "24": 0.5014161974419732
+      },
+      "XRP": {
+        "1": 0.5357493670021404,
+        "4": 0.5164024702269167,
+        "12": 0.4992533666014623,
+        "24": 0.5017889898766423
+      }
+    }
+  },
+  "F5": {
+    "source": "logs/multi_horizon/multi_asset_multi_horizon.json",
+    "rows": {
+      "BTC": {
+        "xgboost": 0.5423651713739079,
+        "persistence": 0.47882788805624693,
+        "best_direction_persistence": 0.5211721119437531
+      },
+      "ETH": {
+        "xgboost": 0.537145853879531,
+        "persistence": 0.4732412535485939,
+        "best_direction_persistence": 0.5267587464514061
+      },
+      "SOL": {
+        "xgboost": 0.5161255600169379,
+        "persistence": 0.4838741700171667,
+        "best_direction_persistence": 0.5161258299828333
+      },
+      "XRP": {
+        "xgboost": 0.5357493670021404,
+        "persistence": 0.4844330334673191,
+        "best_direction_persistence": 0.515566966532681
+      }
+    }
+  },
+  "F6": {
+    "source": "logs/multi_horizon/multi_asset_multi_horizon.json",
+    "rows": [
+      {
+        "symbol": "BTC",
+        "horizon": "1",
+        "fold": 0,
+        "validation_auc": 0.5602448149367995,
+        "test_auc": 0.5500167834843847
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "1",
+        "fold": 1,
+        "validation_auc": 0.5478455594667436,
+        "test_auc": 0.5438437521770855
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "1",
+        "fold": 2,
+        "validation_auc": 0.5437395916250332,
+        "test_auc": 0.5315668308374376
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "4",
+        "fold": 0,
+        "validation_auc": 0.5621434943420341,
+        "test_auc": 0.5445356388122963
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "4",
+        "fold": 1,
+        "validation_auc": 0.5472297235234683,
+        "test_auc": 0.5141505997846969
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "4",
+        "fold": 2,
+        "validation_auc": 0.5229581528174561,
+        "test_auc": 0.5270665239241978
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "12",
+        "fold": 0,
+        "validation_auc": 0.552810388497202,
+        "test_auc": 0.559559257042883
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "12",
+        "fold": 1,
+        "validation_auc": 0.5105122250912624,
+        "test_auc": 0.4943332018302092
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "12",
+        "fold": 2,
+        "validation_auc": 0.5140844501116778,
+        "test_auc": 0.5219530249544766
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "24",
+        "fold": 0,
+        "validation_auc": 0.5588810772465861,
+        "test_auc": 0.5386441771872016
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "24",
+        "fold": 1,
+        "validation_auc": 0.5286387136748485,
+        "test_auc": 0.5058173577957811
+      },
+      {
+        "symbol": "BTC",
+        "horizon": "24",
+        "fold": 2,
+        "validation_auc": 0.49178302872766494,
+        "test_auc": 0.5102188327666849
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "1",
+        "fold": 0,
+        "validation_auc": 0.5560064680196629,
+        "test_auc": 0.5473739879920783
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "1",
+        "fold": 1,
+        "validation_auc": 0.539840909611902,
+        "test_auc": 0.533560162479565
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "1",
+        "fold": 2,
+        "validation_auc": 0.538508615678848,
+        "test_auc": 0.5328261216872919
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "4",
+        "fold": 0,
+        "validation_auc": 0.5312887380192026,
+        "test_auc": 0.5246918765686185
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "4",
+        "fold": 1,
+        "validation_auc": 0.5367404330093736,
+        "test_auc": 0.5249805657179264
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "4",
+        "fold": 2,
+        "validation_auc": 0.5340585501813043,
+        "test_auc": 0.5181633795408449
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "12",
+        "fold": 0,
+        "validation_auc": 0.553295677069262,
+        "test_auc": 0.5482298784014187
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "12",
+        "fold": 1,
+        "validation_auc": 0.5367703046955046,
+        "test_auc": 0.5465936673970779
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "12",
+        "fold": 2,
+        "validation_auc": 0.5391430606208789,
+        "test_auc": 0.5184802064882298
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "24",
+        "fold": 0,
+        "validation_auc": 0.5460057970342197,
+        "test_auc": 0.5352882877319808
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "24",
+        "fold": 1,
+        "validation_auc": 0.54870210536234,
+        "test_auc": 0.5217356709900977
+      },
+      {
+        "symbol": "ETH",
+        "horizon": "24",
+        "fold": 2,
+        "validation_auc": 0.5130079766358887,
+        "test_auc": 0.5562661911698595
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "1",
+        "fold": 0,
+        "validation_auc": 0.5342164887641035,
+        "test_auc": 0.524054461333818
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "1",
+        "fold": 1,
+        "validation_auc": 0.537838289905664,
+        "test_auc": 0.5132395615478648
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "1",
+        "fold": 2,
+        "validation_auc": 0.5275637414803219,
+        "test_auc": 0.5074078769312013
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "4",
+        "fold": 0,
+        "validation_auc": 0.5413031914250249,
+        "test_auc": 0.5137015435654547
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "4",
+        "fold": 1,
+        "validation_auc": 0.533091975864253,
+        "test_auc": 0.5160242375986862
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "4",
+        "fold": 2,
+        "validation_auc": 0.5321013417934297,
+        "test_auc": 0.4751356537008882
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "12",
+        "fold": 0,
+        "validation_auc": 0.5010132707807616,
+        "test_auc": 0.5213422002216722
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "12",
+        "fold": 1,
+        "validation_auc": 0.5194925778934264,
+        "test_auc": 0.5175668050724049
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "12",
+        "fold": 2,
+        "validation_auc": 0.5333372520601097,
+        "test_auc": 0.4645677631902272
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "24",
+        "fold": 0,
+        "validation_auc": 0.4854974587452516,
+        "test_auc": 0.5017736538786735
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "24",
+        "fold": 1,
+        "validation_auc": 0.4991391220311819,
+        "test_auc": 0.5053217898629995
+      },
+      {
+        "symbol": "SOL",
+        "horizon": "24",
+        "fold": 2,
+        "validation_auc": 0.5212504490979305,
+        "test_auc": 0.48067510909343686
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "1",
+        "fold": 0,
+        "validation_auc": 0.5730793906569387,
+        "test_auc": 0.5511936874814168
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "1",
+        "fold": 1,
+        "validation_auc": 0.5357783943341312,
+        "test_auc": 0.5306441820685747
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "1",
+        "fold": 2,
+        "validation_auc": 0.5287703476192002,
+        "test_auc": 0.5267453038578171
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "4",
+        "fold": 0,
+        "validation_auc": 0.5895920558360174,
+        "test_auc": 0.5260883713856545
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "4",
+        "fold": 1,
+        "validation_auc": 0.5234194491434679,
+        "test_auc": 0.5242139294813413
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "4",
+        "fold": 2,
+        "validation_auc": 0.5107581447486628,
+        "test_auc": 0.49886571240375427
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "12",
+        "fold": 0,
+        "validation_auc": 0.570557454118615,
+        "test_auc": 0.5042112258292407
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "12",
+        "fold": 1,
+        "validation_auc": 0.533310955835958,
+        "test_auc": 0.49898425924814593
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "12",
+        "fold": 2,
+        "validation_auc": 0.49655930399486836,
+        "test_auc": 0.49801852893596554
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "24",
+        "fold": 0,
+        "validation_auc": 0.5849332349778701,
+        "test_auc": 0.513737915571946
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "24",
+        "fold": 1,
+        "validation_auc": 0.5454279709391756,
+        "test_auc": 0.5335606723501422
+      },
+      {
+        "symbol": "XRP",
+        "horizon": "24",
+        "fold": 2,
+        "validation_auc": 0.46979185165819737,
+        "test_auc": 0.4771403323681908
+      }
+    ]
+  },
+  "F7": {
+    "source": "logs/retrain_frequency/multi_asset_retrain_frequency.json",
+    "rows": [
+      {
+        "label": "BTC\nR4000",
+        "delta_auc": 0.0038565333715406824,
+        "err_low": 0.00795954064939613,
+        "err_high": 0.008381847734885244
+      },
+      {
+        "label": "BTC\nR1000",
+        "delta_auc": 0.005436908766634496,
+        "err_low": 0.009202004058843328,
+        "err_high": 0.008947802021528811
+      },
+      {
+        "label": "BTC\nR168",
+        "delta_auc": 0.006990811932888086,
+        "err_low": 0.00941508741210587,
+        "err_high": 0.008827026165936787
+      },
+      {
+        "label": "ETH\nR4000",
+        "delta_auc": 0.00166594566829259,
+        "err_low": 0.004923191853816054,
+        "err_high": 0.0063550452937265085
+      },
+      {
+        "label": "ETH\nR1000",
+        "delta_auc": 0.002138375326684594,
+        "err_low": 0.0063961451456336395,
+        "err_high": 0.0070101869598329595
+      },
+      {
+        "label": "ETH\nR168",
+        "delta_auc": 0.001315327738282135,
+        "err_low": 0.006534875756306682,
+        "err_high": 0.007612638207498914
+      },
+      {
+        "label": "SOL\nR4000",
+        "delta_auc": 0.0062890601658335266,
+        "err_low": 0.008029402642502365,
+        "err_high": 0.007934861474548003
+      },
+      {
+        "label": "SOL\nR1000",
+        "delta_auc": 0.007872331853152947,
+        "err_low": 0.009662744392937576,
+        "err_high": 0.0087782905015278
+      },
+      {
+        "label": "SOL\nR168",
+        "delta_auc": 0.008160127457352617,
+        "err_low": 0.009723898083850912,
+        "err_high": 0.009583463962891677
+      },
+      {
+        "label": "XRP\nR4000",
+        "delta_auc": 0.008843212748786855,
+        "err_low": 0.011509935502784625,
+        "err_high": 0.011744170489284583
+      },
+      {
+        "label": "XRP\nR1000",
+        "delta_auc": 0.005215490745484219,
+        "err_low": 0.011604791654341567,
+        "err_high": 0.01238898220150969
+      },
+      {
+        "label": "XRP\nR168",
+        "delta_auc": 0.0018122599424961194,
+        "err_low": 0.01199967466680781,
+        "err_high": 0.012213838420560032
+      }
+    ]
+  },
+  "F8": {
+    "source": "logs/retrain_frequency/multi_asset_retrain_frequency.json",
+    "rows": {
+      "BTC": [
+        {
+          "interval": 0,
+          "auc": 0.5080088141025642
+        },
+        {
+          "interval": 1,
+          "auc": 0.5467648537260815
+        },
+        {
+          "interval": 2,
+          "auc": 0.5418639933166249
+        },
+        {
+          "interval": 3,
+          "auc": 0.4772715142004665
+        },
+        {
+          "interval": 4,
+          "auc": 0.5433943394339434
+        },
+        {
+          "interval": 5,
+          "auc": 0.5334503022364294
+        },
+        {
+          "interval": 6,
+          "auc": 0.5232547521981771
+        },
+        {
+          "interval": 7,
+          "auc": 0.476515407243092
+        },
+        {
+          "interval": 8,
+          "auc": 0.5159607305095887
+        },
+        {
+          "interval": 9,
+          "auc": 0.5355528088779021
+        },
+        {
+          "interval": 10,
+          "auc": 0.5458973287920657
+        },
+        {
+          "interval": 11,
+          "auc": 0.5060994895405866
+        }
+      ],
+      "ETH": [
+        {
+          "interval": 0,
+          "auc": 0.5416501634320326
+        },
+        {
+          "interval": 1,
+          "auc": 0.503653988363401
+        },
+        {
+          "interval": 2,
+          "auc": 0.5702869591930639
+        },
+        {
+          "interval": 3,
+          "auc": 0.5329972031405955
+        },
+        {
+          "interval": 4,
+          "auc": 0.531692211673488
+        },
+        {
+          "interval": 5,
+          "auc": 0.5524446349135146
+        },
+        {
+          "interval": 6,
+          "auc": 0.5115199514440559
+        },
+        {
+          "interval": 7,
+          "auc": 0.5205633780229649
+        },
+        {
+          "interval": 8,
+          "auc": 0.5082918606946067
+        },
+        {
+          "interval": 9,
+          "auc": 0.5517094205189147
+        },
+        {
+          "interval": 10,
+          "auc": 0.5222060451460749
+        },
+        {
+          "interval": 11,
+          "auc": 0.5359959998502617
+        }
+      ],
+      "SOL": [
+        {
+          "interval": 0,
+          "auc": 0.5405527932338898
+        },
+        {
+          "interval": 1,
+          "auc": 0.5292314832597145
+        },
+        {
+          "interval": 2,
+          "auc": 0.5406869968180751
+        },
+        {
+          "interval": 3,
+          "auc": 0.49179012345679013
+        },
+        {
+          "interval": 4,
+          "auc": 0.5088306857310068
+        },
+        {
+          "interval": 5,
+          "auc": 0.5389425609227588
+        },
+        {
+          "interval": 6,
+          "auc": 0.500593523714911
+        },
+        {
+          "interval": 7,
+          "auc": 0.552498605308257
+        },
+        {
+          "interval": 8,
+          "auc": 0.508911554010166
+        },
+        {
+          "interval": 9,
+          "auc": 0.4482803724347065
+        },
+        {
+          "interval": 10,
+          "auc": 0.4842742540110961
+        },
+        {
+          "interval": 11,
+          "auc": 0.4604358478813802
+        }
+      ],
+      "XRP": [
+        {
+          "interval": 0,
+          "auc": 0.5449603766224744
+        },
+        {
+          "interval": 1,
+          "auc": 0.5057981831022086
+        },
+        {
+          "interval": 2,
+          "auc": 0.4937219039962482
+        },
+        {
+          "interval": 3,
+          "auc": 0.5151562606660001
+        },
+        {
+          "interval": 4,
+          "auc": 0.5185706741770816
+        },
+        {
+          "interval": 5,
+          "auc": 0.5104500717312248
+        },
+        {
+          "interval": 6,
+          "auc": 0.4922741722136883
+        },
+        {
+          "interval": 7,
+          "auc": 0.5394937517951705
+        },
+        {
+          "interval": 8,
+          "auc": 0.5356116452991454
+        },
+        {
+          "interval": 9,
+          "auc": 0.4730751072274502
+        },
+        {
+          "interval": 10,
+          "auc": 0.5290823531977775
+        },
+        {
+          "interval": 11,
+          "auc": 0.4866619957962166
+        }
+      ]
+    }
+  },
+  "F9": {
+    "source": "logs/three_class_target/multi_asset_three_class_target.json",
+    "rows": {
+      "BTC": {
+        "T": [
+          {
+            "q": 0.05,
+            "threshold": 0.2353534400463104,
+            "trade_count": 529,
+            "trade_ratio": 0.044083333333333335,
+            "mean_net_return": -0.0018851630705999669,
+            "hit_rate": 0.5160680529300568
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.20044664591550826,
+            "trade_count": 997,
+            "trade_ratio": 0.08308333333333333,
+            "mean_net_return": -0.0015676675921275074,
+            "hit_rate": 0.5235707121364093
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.15482583642005923,
+            "trade_count": 2181,
+            "trade_ratio": 0.18175,
+            "mean_net_return": -0.001837660692518178,
+            "hit_rate": 0.5259055479138011
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.12333232164382933,
+            "trade_count": 3433,
+            "trade_ratio": 0.28608333333333336,
+            "mean_net_return": -0.0016150525772349249,
+            "hit_rate": 0.533935333527527
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.08016115427017212,
+            "trade_count": 5782,
+            "trade_ratio": 0.48183333333333334,
+            "mean_net_return": -0.0016132304403985278,
+            "hit_rate": 0.5361466620546523
+          },
+          {
+            "q": 1.0,
+            "threshold": 1.621246337890625e-05,
+            "trade_count": 11997,
+            "trade_ratio": 0.99975,
+            "mean_net_return": -0.0018441133363876771,
+            "hit_rate": 0.5182128865549721
+          }
+        ],
+        "B": [
+          {
+            "q": 0.05,
+            "threshold": 0.15242673158645628,
+            "trade_count": 561,
+            "trade_ratio": 0.04675,
+            "mean_net_return": -0.0017998391666815975,
+            "hit_rate": 0.5383244206773619
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.13008729219436646,
+            "trade_count": 1084,
+            "trade_ratio": 0.09033333333333333,
+            "mean_net_return": -0.0014885439057070041,
+            "hit_rate": 0.5507380073800738
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.10218578577041627,
+            "trade_count": 2279,
+            "trade_ratio": 0.18991666666666668,
+            "mean_net_return": -0.001613970521607971,
+            "hit_rate": 0.5476086002632734
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.08272145390510557,
+            "trade_count": 3484,
+            "trade_ratio": 0.29033333333333333,
+            "mean_net_return": -0.0018096963981865325,
+            "hit_rate": 0.5341561423650976
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.05407194793224335,
+            "trade_count": 5830,
+            "trade_ratio": 0.48583333333333334,
+            "mean_net_return": -0.0016746359809670834,
+            "hit_rate": 0.537221269296741
+          },
+          {
+            "q": 1.0,
+            "threshold": 3.993511199951172e-06,
+            "trade_count": 11999,
+            "trade_ratio": 0.9999166666666667,
+            "mean_net_return": -0.0018837211737341422,
+            "hit_rate": 0.5242936911409284
+          }
+        ],
+        "P": [
+          {
+            "q": 0.05,
+            "threshold": 0.023059463312541696,
+            "trade_count": 360,
+            "trade_ratio": 0.03,
+            "mean_net_return": -0.0009994813859697388,
+            "hit_rate": 0.55
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.016585103376438582,
+            "trade_count": 833,
+            "trade_ratio": 0.06941666666666667,
+            "mean_net_return": -0.0022238348437992484,
+            "hit_rate": 0.5222088835534213
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.010938750527432954,
+            "trade_count": 1838,
+            "trade_ratio": 0.15316666666666667,
+            "mean_net_return": -0.001856003468793447,
+            "hit_rate": 0.5331882480957563
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.008056600331395365,
+            "trade_count": 2940,
+            "trade_ratio": 0.245,
+            "mean_net_return": -0.0018015081154850725,
+            "hit_rate": 0.5319727891156463
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.004526618729564171,
+            "trade_count": 5480,
+            "trade_ratio": 0.45666666666666667,
+            "mean_net_return": -0.0018027605909100024,
+            "hit_rate": 0.5288321167883212
+          },
+          {
+            "q": 1.0,
+            "threshold": 2.749536709423239e-16,
+            "trade_count": 12000,
+            "trade_ratio": 1.0,
+            "mean_net_return": -0.0018757602016822295,
+            "hit_rate": 0.52025
+          }
+        ]
+      },
+      "ETH": {
+        "T": [
+          {
+            "q": 0.05,
+            "threshold": 0.2206244871020316,
+            "trade_count": 621,
+            "trade_ratio": 0.05175,
+            "mean_net_return": -0.0030813328115764406,
+            "hit_rate": 0.48792270531400966
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.18420882225036625,
+            "trade_count": 1189,
+            "trade_ratio": 0.09908333333333333,
+            "mean_net_return": -0.002302476032853577,
+            "hit_rate": 0.5407905803195963
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.1422208309173584,
+            "trade_count": 2469,
+            "trade_ratio": 0.20575,
+            "mean_net_return": -0.0016713977154488781,
+            "hit_rate": 0.5439449169704333
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.11515341103076931,
+            "trade_count": 3609,
+            "trade_ratio": 0.30075,
+            "mean_net_return": -0.0018047174641998552,
+            "hit_rate": 0.5394846217788861
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.07587727904319763,
+            "trade_count": 5935,
+            "trade_ratio": 0.4945833333333333,
+            "mean_net_return": -0.001737765162750288,
+            "hit_rate": 0.5356360572872788
+          },
+          {
+            "q": 1.0,
+            "threshold": 3.5136938095092773e-05,
+            "trade_count": 11997,
+            "trade_ratio": 0.99975,
+            "mean_net_return": -0.0018424760432936894,
+            "hit_rate": 0.5260481787113445
+          }
+        ],
+        "B": [
+          {
+            "q": 0.05,
+            "threshold": 0.13634815514087675,
+            "trade_count": 664,
+            "trade_ratio": 0.05533333333333333,
+            "mean_net_return": -0.002363449524581102,
+            "hit_rate": 0.5075301204819277
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.11409313678741455,
+            "trade_count": 1230,
+            "trade_ratio": 0.1025,
+            "mean_net_return": -0.0021777828827979164,
+            "hit_rate": 0.5317073170731708
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.0883523464202881,
+            "trade_count": 2425,
+            "trade_ratio": 0.20208333333333334,
+            "mean_net_return": -0.0021191229450254643,
+            "hit_rate": 0.5315463917525773
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.07116112411022185,
+            "trade_count": 3632,
+            "trade_ratio": 0.30266666666666664,
+            "mean_net_return": -0.0019270642424087756,
+            "hit_rate": 0.5355176211453745
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.0460188090801239,
+            "trade_count": 6115,
+            "trade_ratio": 0.5095833333333334,
+            "mean_net_return": -0.0019179885069199496,
+            "hit_rate": 0.52886345053148
+          },
+          {
+            "q": 1.0,
+            "threshold": 2.586841583251953e-05,
+            "trade_count": 11998,
+            "trade_ratio": 0.9998333333333334,
+            "mean_net_return": -0.0020454797113765317,
+            "hit_rate": 0.5159193198866477
+          }
+        ],
+        "P": [
+          {
+            "q": 0.05,
+            "threshold": 0.03003279018867968,
+            "trade_count": 467,
+            "trade_ratio": 0.03891666666666667,
+            "mean_net_return": -0.0020726630654981223,
+            "hit_rate": 0.5417558886509636
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.02200777764813089,
+            "trade_count": 1004,
+            "trade_ratio": 0.08366666666666667,
+            "mean_net_return": -0.002983519034067917,
+            "hit_rate": 0.5258964143426295
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.014725401689958124,
+            "trade_count": 2101,
+            "trade_ratio": 0.17508333333333334,
+            "mean_net_return": -0.0029576675067414042,
+            "hit_rate": 0.5221323179438363
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.010857566241810725,
+            "trade_count": 3289,
+            "trade_ratio": 0.27408333333333335,
+            "mean_net_return": -0.0025657192925612328,
+            "hit_rate": 0.5159622985709942
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.0063262388751949335,
+            "trade_count": 5578,
+            "trade_ratio": 0.4648333333333333,
+            "mean_net_return": -0.0024637256206934514,
+            "hit_rate": 0.5173897454284689
+          },
+          {
+            "q": 1.0,
+            "threshold": 7.35089072945172e-17,
+            "trade_count": 11998,
+            "trade_ratio": 0.9998333333333334,
+            "mean_net_return": -0.002169628058791117,
+            "hit_rate": 0.5158359726621103
+          }
+        ]
+      },
+      "SOL": {
+        "T": [
+          {
+            "q": 0.05,
+            "threshold": 0.21736164987087248,
+            "trade_count": 688,
+            "trade_ratio": 0.05733333333333333,
+            "mean_net_return": -0.0011611312270482657,
+            "hit_rate": 0.4941860465116279
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.17414318919181826,
+            "trade_count": 1496,
+            "trade_ratio": 0.12466666666666666,
+            "mean_net_return": -0.0015582664618376976,
+            "hit_rate": 0.48863636363636365
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.13234217166900636,
+            "trade_count": 2771,
+            "trade_ratio": 0.23091666666666666,
+            "mean_net_return": -0.0012866663243364653,
+            "hit_rate": 0.5084806928906532
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.10548510551452635,
+            "trade_count": 3940,
+            "trade_ratio": 0.3283333333333333,
+            "mean_net_return": -0.0014860538085400305,
+            "hit_rate": 0.49949238578680205
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.06735764443874359,
+            "trade_count": 6231,
+            "trade_ratio": 0.51925,
+            "mean_net_return": -0.0015222715273766714,
+            "hit_rate": 0.5034504894880436
+          },
+          {
+            "q": 1.0,
+            "threshold": 6.079673767089844e-06,
+            "trade_count": 12000,
+            "trade_ratio": 1.0,
+            "mean_net_return": -0.0017877247403885652,
+            "hit_rate": 0.5015
+          }
+        ],
+        "B": [
+          {
+            "q": 0.05,
+            "threshold": 0.11873873770236967,
+            "trade_count": 963,
+            "trade_ratio": 0.08025,
+            "mean_net_return": -0.000547554585206064,
+            "hit_rate": 0.5202492211838006
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.0972852796316147,
+            "trade_count": 1772,
+            "trade_ratio": 0.14766666666666667,
+            "mean_net_return": -0.0008764643495671196,
+            "hit_rate": 0.5079006772009029
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.07442430853843691,
+            "trade_count": 3098,
+            "trade_ratio": 0.25816666666666666,
+            "mean_net_return": -0.0011293260202588586,
+            "hit_rate": 0.5090380890897354
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.05944207608699798,
+            "trade_count": 4284,
+            "trade_ratio": 0.357,
+            "mean_net_return": -0.001488945706996295,
+            "hit_rate": 0.4995331465919701
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.038094669580459595,
+            "trade_count": 6539,
+            "trade_ratio": 0.5449166666666667,
+            "mean_net_return": -0.0016498829473447806,
+            "hit_rate": 0.49961767854411987
+          },
+          {
+            "q": 1.0,
+            "threshold": 2.1457672119140625e-06,
+            "trade_count": 12000,
+            "trade_ratio": 1.0,
+            "mean_net_return": -0.0019604653698675877,
+            "hit_rate": 0.49383333333333335
+          }
+        ],
+        "P": [
+          {
+            "q": 0.05,
+            "threshold": 0.04237070256545801,
+            "trade_count": 240,
+            "trade_ratio": 0.02,
+            "mean_net_return": 0.00046318796476309515,
+            "hit_rate": 0.5541666666666667
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.031792575700684854,
+            "trade_count": 592,
+            "trade_ratio": 0.04933333333333333,
+            "mean_net_return": -0.0008499286440370637,
+            "hit_rate": 0.543918918918919
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.021802629054998617,
+            "trade_count": 1502,
+            "trade_ratio": 0.12516666666666668,
+            "mean_net_return": -0.0013750430388680358,
+            "hit_rate": 0.5346205059920106
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.01634212114486725,
+            "trade_count": 2499,
+            "trade_ratio": 0.20825,
+            "mean_net_return": -0.0012543069256789356,
+            "hit_rate": 0.5266106442577031
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.00982185399952305,
+            "trade_count": 4829,
+            "trade_ratio": 0.40241666666666664,
+            "mean_net_return": -0.0017398851089687369,
+            "hit_rate": 0.5160488714019466
+          },
+          {
+            "q": 1.0,
+            "threshold": 2.168404344971009e-18,
+            "trade_count": 11999,
+            "trade_ratio": 0.9999166666666667,
+            "mean_net_return": -0.0020277276774352637,
+            "hit_rate": 0.5058754896241353
+          }
+        ]
+      },
+      "XRP": {
+        "T": [
+          {
+            "q": 0.05,
+            "threshold": 0.29639329984784113,
+            "trade_count": 581,
+            "trade_ratio": 0.04841666666666666,
+            "mean_net_return": -0.001805671569785461,
+            "hit_rate": 0.540447504302926
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.24856868088245393,
+            "trade_count": 1176,
+            "trade_ratio": 0.098,
+            "mean_net_return": -0.001844777317129422,
+            "hit_rate": 0.5289115646258503
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.19086890220642092,
+            "trade_count": 2339,
+            "trade_ratio": 0.19491666666666665,
+            "mean_net_return": -0.0018159118975133782,
+            "hit_rate": 0.5327062847370672
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.15226762890815734,
+            "trade_count": 3511,
+            "trade_ratio": 0.2925833333333333,
+            "mean_net_return": -0.001848721996692818,
+            "hit_rate": 0.5272002278553118
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.09861196577548981,
+            "trade_count": 5816,
+            "trade_ratio": 0.4846666666666667,
+            "mean_net_return": -0.001884665171969884,
+            "hit_rate": 0.5208046767537826
+          },
+          {
+            "q": 1.0,
+            "threshold": 2.7000904083251953e-05,
+            "trade_count": 11999,
+            "trade_ratio": 0.9999166666666667,
+            "mean_net_return": -0.0018619254034534206,
+            "hit_rate": 0.5124593716143012
+          }
+        ],
+        "B": [
+          {
+            "q": 0.05,
+            "threshold": 0.17203155159950254,
+            "trade_count": 547,
+            "trade_ratio": 0.04558333333333333,
+            "mean_net_return": -0.001824902643146397,
+            "hit_rate": 0.526508226691042
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.14026398062705997,
+            "trade_count": 1182,
+            "trade_ratio": 0.0985,
+            "mean_net_return": -0.0024314186278918764,
+            "hit_rate": 0.5050761421319797
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.1075902402400971,
+            "trade_count": 2415,
+            "trade_ratio": 0.20125,
+            "mean_net_return": -0.002347767212357145,
+            "hit_rate": 0.5105590062111801
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.08536035418510435,
+            "trade_count": 3692,
+            "trade_ratio": 0.30766666666666664,
+            "mean_net_return": -0.002297929964760225,
+            "hit_rate": 0.5121885157096425
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.05464635789394379,
+            "trade_count": 6040,
+            "trade_ratio": 0.5033333333333333,
+            "mean_net_return": -0.0022407686407369776,
+            "hit_rate": 0.5086092715231788
+          },
+          {
+            "q": 1.0,
+            "threshold": 5.364418029785156e-07,
+            "trade_count": 12000,
+            "trade_ratio": 1.0,
+            "mean_net_return": -0.0020081822798615604,
+            "hit_rate": 0.507
+          }
+        ],
+        "P": [
+          {
+            "q": 0.05,
+            "threshold": 0.03799405843243698,
+            "trade_count": 226,
+            "trade_ratio": 0.018833333333333334,
+            "mean_net_return": 0.000550668470522897,
+            "hit_rate": 0.5663716814159292
+          },
+          {
+            "q": 0.1,
+            "threshold": 0.02704747703504691,
+            "trade_count": 574,
+            "trade_ratio": 0.04783333333333333,
+            "mean_net_return": -0.0001329008354265503,
+            "hit_rate": 0.5714285714285714
+          },
+          {
+            "q": 0.2,
+            "threshold": 0.017593913194646444,
+            "trade_count": 1533,
+            "trade_ratio": 0.12775,
+            "mean_net_return": -0.0009639236759158337,
+            "hit_rate": 0.5538160469667319
+          },
+          {
+            "q": 0.3,
+            "threshold": 0.012807094204630528,
+            "trade_count": 2612,
+            "trade_ratio": 0.21766666666666667,
+            "mean_net_return": -0.0014593783161568716,
+            "hit_rate": 0.5317764165390505
+          },
+          {
+            "q": 0.5,
+            "threshold": 0.007320443914594476,
+            "trade_count": 5015,
+            "trade_ratio": 0.41791666666666666,
+            "mean_net_return": -0.0017390210225401521,
+            "hit_rate": 0.5248255234297109
+          },
+          {
+            "q": 1.0,
+            "threshold": 2.168404344971009e-18,
+            "trade_count": 11997,
+            "trade_ratio": 0.99975,
+            "mean_net_return": -0.0019061667427677982,
+            "hit_rate": 0.5122947403517546
+          }
+        ]
+      }
+    }
+  },
+  "F10": {
+    "source": "data/features/*_4h.csv and logs/three_class_target/multi_asset_three_class_target.json",
+    "formula": "gross=(2p-1)*E|r|; p*=0.5+c/(2E|r|)",
+    "cost": 0.002,
+    "rows": {
+      "BTC": {
+        "train_mean_abs_return": 0.00751957934003898,
+        "breakeven_hit_rate": 0.6329861624938737,
+        "measured_T_hit_rate": 0.526361207610544,
+        "measured_T_gross_return": 0.00020973998855261666
+      },
+      "ETH": {
+        "train_mean_abs_return": 0.009638342102809807,
+        "breakeven_hit_rate": 0.6037522832592211,
+        "measured_T_hit_rate": 0.5400839129345757,
+        "measured_T_gross_return": 0.00023902010171728572
+      },
+      "SOL": {
+        "train_mean_abs_return": 0.015846515047311653,
+        "breakeven_hit_rate": 0.563105357677343,
+        "measured_T_hit_rate": 0.4991174586414475,
+        "measured_T_gross_return": 0.0005113171706080807
+      },
+      "XRP": {
+        "train_mean_abs_return": 0.011101432869738647,
+        "breakeven_hit_rate": 0.5900784620988788,
+        "measured_T_hit_rate": 0.5232112060441175,
+        "measured_T_gross_return": 6.818444820520262e-05
+      }
+    }
+  }
+}

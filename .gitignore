@@ -12,3 +12,4 @@ logs/
 artifacts/
 .venv/
 models/live/
+backup_manifest.json

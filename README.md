@@ -18,7 +18,7 @@
 
 **訊號強度尚不足以支撐任何交易或風險預警宣稱**：SOL 近乎隨機，BTC／ETH 也僅約 0.53，深度模型未穩定勝過 XGBoost。引用本專題結果時請一律使用上述數字，勿以其他章節績效替代。詳見 [docs/multi_asset_4h_model_comparison.md](docs/multi_asset_4h_model_comparison.md)。
 
-BTC 已定案為 Transformer，不再重新訓練；ETH／SOL／XRP 的 4 小時三模型重跑與定案檢視已完成，結論皆偏向「無可靠優勝模型」。四幣種總報告、多視窗比較（僅 XRP 1h 通過，列為候選假說）、重訓頻率實驗（無任何組通過）與三段式目標實驗（四幣種扣手續費後皆為負報酬，無幣種通過）皆已完成，詳見 [docs/five_year_4h_final_report.md](docs/five_year_4h_final_report.md)。
+BTC 曾依早期結果定案為 Transformer；ETH／SOL／XRP 的 4 小時三模型重跑與定案檢視已完成，結論皆偏向「無可靠優勝模型」。四幣種總報告、多視窗比較（僅 XRP 1h 通過，列為候選假說）、重訓頻率實驗（無任何組通過）與三段式目標實驗（四幣種扣手續費後皆為負報酬，無幣種通過）皆已完成，詳見 [docs/five_year_4h_final_report.md](docs/five_year_4h_final_report.md)。延伸研究已改問「波動大小」而非方向，結果見 [docs/volatility_target_extension_results.md](docs/volatility_target_extension_results.md)。
 
 ## 持續更新資料與前向測試（程式已完成，排程尚未啟用）
 
