@@ -209,36 +209,19 @@
 | 備份 | 部分完成 | 壓縮檔本身就是一份備份；請再存一份到雲端硬碟 |
 | 遠端 repo | 未設定 | 若要用 GitHub，建 **private** repo 後 push `main`（push 前用 `git grep -n -i "api_key\|secret\|password"` 確認沒有金鑰） |
 | 即時預測展示 | 決定不做 | 需要時見 `final_stage_work_plan.md` 工作 7 |
-| `.ptl` 模型檔（PyTorch Lite） | **尚未製作** | 見下方 6.1 |
+| `.ptl` 模型檔（PyTorch Lite） | 已完成 | 見下方 6.1；`max|ptl - pth|=5.96e-08`，batch_vs_single=0 |
 | 前端呈現 | **尚未製作** | 見下方 6.2 |
 | 新資料獨立驗證 | **2027-01-25 之後** | 見 `final_stage_work_plan.md` 工作 8；波動大小預測也應一起驗證 |
 
-### 6.1 `.ptl` 模型檔（尚未製作）
+### 6.1 `.ptl` 模型檔（已完成，2026-09-30）
 
-`.ptl` 是給手機或嵌入式裝置用的 PyTorch Lite 格式，要從 `.pth` 轉出來。專案裡**只有 BTC 24h Transformer 有 PyTorch 權重**（`models/btc_24h_pytorch_transformer/checkpoints/btc_24h_final.pth`）。4h 的實驗沒有儲存權重，要轉 4h 模型就得先重新訓練並存檔。
+完整步驟見 **[`docs/ptl_guide.md`](ptl_guide.md)**（匯出程式、驗證程式、Python／Android／iOS 執行方式、輸入資料準備、常見問題）。重點：
 
-轉檔步驟（**尚未實際執行過，第一次做時請核對輸入形狀**）：
-
-```python
-import sys
-from pathlib import Path
-import torch
-from torch.utils.mobile_optimizer import optimize_for_mobile
-
-sys.path.insert(0, "src")
-from pytorch_transformer_artifacts import load_artifact_pair
-
-ckpt = Path("models/btc_24h_pytorch_transformer/checkpoints")
-model, metadata = load_artifact_pair(ckpt / "btc_24h_final.pth", ckpt / "btc_24h_final.pkl")  # 已設為 eval 模式
-example = torch.zeros(1, model.config.sequence_length, model.config.feature_count)  # (batch, 24, 特徵數)，需核對
-scripted = torch.jit.trace(model, example)
-optimize_for_mobile(scripted)._save_for_lite_interpreter(str(ckpt / "btc_24h_final.ptl"))
-```
-
-注意：
-- `.pkl` 裡存的是前處理設定（標準化參數、門檻等），`.ptl` **不包含**這些。使用 `.ptl` 的程式必須自己照 `.pkl` 的內容做相同的前處理，否則預測結果會錯。
-- 轉完後，用同一筆輸入比較 `.pth` 與 `.ptl` 的輸出，差距應小於 1e-5。
-- 這個模型的訊號一樣很弱，只能當技術展示，不能宣稱能預測或獲利。
+- 只有 BTC 24h Transformer（`models/btc_24h_pytorch_transformer/checkpoints/btc_24h_final.pth`）可以轉；它是 3 年資料階段的模型，不是 5 年 4h 主實驗的模型。
+- 匯出的 `.ptl` 會把標準化與 sigmoid 包進去：輸入原始特徵 `(1, 24, 53)`，輸出上漲機率。
+- 已產生 `models/btc_24h_pytorch_transformer/checkpoints/btc_24h_final.ptl` 與 `btc_24h_final.ptl.json`。
+- 驗證結果：`windows=200 max|ptl - pth|=5.96e-08 batch_vs_single=0.00e+00`，`PASS`。紀錄在 `logs/ptl_export_*.log` 與 `logs/ptl_verify_*.log`。
+- 由於目前 Windows torch build 沒有 XNNPACK，`optimize_for_mobile` 已自動跳過；模型仍可由 lite interpreter 載入並通過一致性驗證。
 
 ### 6.2 前端呈現（尚未製作）
 
