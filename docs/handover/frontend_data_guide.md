@@ -27,10 +27,10 @@
 │  └─ feature_manifest.json       53 個特徵名稱
 ├─ models/
 │  ├─ live/                       4h XGBoost：凍結模型、滾動模型與 meta
-│  └─ btc_4h_transformer/
-│     ├─ btc_4h_transformer.ptl        行動端模型
-│     ├─ btc_4h_transformer.ptl.json   .ptl 輸入輸出規格
-│     └─ btc_4h_transformer.pth        原始 PyTorch 權重與標準化參數
+│  └─ <幣種>_4h_transformer/        btc、eth、sol、xrp 各一個資料夾
+│     ├─ <幣種>_4h_transformer.ptl        行動端模型
+│     ├─ <幣種>_4h_transformer.ptl.json   .ptl 輸入輸出規格
+│     └─ <幣種>_4h_transformer.pth        原始 PyTorch 權重與標準化參數
 ├─ data/
 │  ├─ live/                       即時更新用的 K 線（raw、processed）
 │  └─ features/*_4h.csv           實驗用的 4h 特徵檔（更新程式做一致性檢查時需要）
@@ -46,7 +46,7 @@
 | 研究結果 | 四幣種模型 AUC、多視窗比較、三段式淨報酬、手續費損益兩平 | `docs/figures/*.png`、`figure_data.json` | 四 |
 | 即時預測 | 各幣種每小時的上漲機率與實際結果 | `logs/live/predictions.csv` | 三 |
 | 模型狀態 | 最新資料時間、凍結模型近 30 天 AUC | `live_pipeline.py status` | 六 |
-| 模型展示 | BTC 4h Transformer 的 `.ptl` | `models/btc_4h_transformer/` | 五 |
+| 模型展示 | 四幣種 4h Transformer 的 `.ptl` | `models/<幣種>_4h_transformer/` | 五 |
 | 聲明 | 研究展示、訊號微弱、不構成投資建議 | 固定文字 | 七 |
 
 ---
@@ -141,7 +141,7 @@ const btcFrozen = rows
 |---|---|---|---|---|
 | 4h XGBoost 凍結模型 | `models/live/<幣種>_4h_frozen.json` | 53 個特徵（單列，順序見 `logs/feature_manifest.json`） | 上漲機率 | 不行，需要 Python 後端 |
 | 4h XGBoost 滾動模型 | `models/live/<幣種>_4h_rolling_*.json` ＋ `.meta.json` | 同上 | 上漲機率 | 不行 |
-| BTC 4h Transformer | `models/btc_4h_transformer/btc_4h_transformer.ptl` | 原始特徵 `(1, 24, 53)` | 4 小時後上漲分數（未校準） | 不行；`.ptl` 給 Android／iOS 或 Python lite interpreter 用 |
+| 4h Transformer（四幣種各一） | `models/<幣種>_4h_transformer/<幣種>_4h_transformer.ptl` | 原始特徵 `(1, 24, 53)` | 4 小時後上漲分數（未校準） | 不行；`.ptl` 給 Android／iOS 或 Python lite interpreter 用 |
 
 **建議**：網站不要自己跑模型，直接讀 `predictions.csv`。模型的預測已經由 `live_pipeline.py` 算好寫進去了。
 

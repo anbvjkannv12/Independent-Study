@@ -93,7 +93,7 @@ requirements-lock.txt 完整套件版本
 scripts/             資料流程、實驗、驗證、圖表、前向測試、.ptl 產生程式
 tests/               單元測試
 run/                 早期實際執行的 notebook（見 run/README.md）
-models/btc_4h_transformer/  BTC 4h Transformer 權重與 .ptl
+models/<幣種>_4h_transformer/  四幣種 4h Transformer 權重與 .ptl
 docs/
   handover/          交接文件、前端資料說明、.ptl 說明、git 歷史改寫對照表
   report/            專題報告初稿、簡報大綱、階段總報告、研究計畫書
@@ -115,7 +115,7 @@ models/live/         前向測試的凍結模型與滾動模型
 | [交接使用說明.md](交接使用說明.md) | 交接後怎麼開始、日常操作 |
 | [docs/handover/handover.md](docs/handover/handover.md) | 專案現況、檔案清單、剩下的工作、規則、附錄（繳交規定、寫作原則、新資料驗證、排程） |
 | [docs/handover/frontend_data_guide.md](docs/handover/frontend_data_guide.md) | 前端網站需要的資料與格式 |
-| [docs/handover/ptl_guide.md](docs/handover/ptl_guide.md) | BTC 4h Transformer 的 `.ptl` 行動端模型說明 |
+| [docs/handover/ptl_guide.md](docs/handover/ptl_guide.md) | 四幣種 4h Transformer 的 `.ptl` 行動端模型說明 |
 | [docs/report/final_project_report.md](docs/report/final_project_report.md) | 專題報告初稿 |
 | [docs/report/final_presentation_outline.md](docs/report/final_presentation_outline.md) | 口試簡報大綱與 Q&A |
 | [docs/report/five_year_4h_final_report.md](docs/report/five_year_4h_final_report.md) | 五年資料 4 小時方向分類階段報告 |

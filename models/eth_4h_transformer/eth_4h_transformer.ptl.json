@@ -1,9 +1,9 @@
 {
-  "symbol": "BTC",
-  "model_file": "btc_4h_transformer.ptl",
-  "data_file": "data/features/btc_4h.csv",
-  "source_checkpoint": "btc_4h_transformer.pth",
-  "source_checkpoint_sha256": "fc2b5011b874a74ea1b8ed80443c8e567f9a6a5d58e773b789ae8905f2b40ff2",
+  "symbol": "ETH",
+  "model_file": "eth_4h_transformer.ptl",
+  "data_file": "data/features/eth_4h.csv",
+  "source_checkpoint": "eth_4h_transformer.pth",
+  "source_checkpoint_sha256": "6f45f09f9d630ca3d3eb6e642a23d43125588211e202f233dd9f4f830986e112",
   "torch_version": "2.14.0+cu126",
   "mobile_optimization": "none - optimize_for_mobile skipped because XNNPACK is unavailable",
   "input": {
@@ -85,5 +85,5 @@
     "validation_start": "2026-02-23 15:00:00+00:00",
     "validation_end": "2026-08-09 06:00:00+00:00"
   },
-  "validation_auc": 0.5397799991049352
+  "validation_auc": 0.5322063224642255
 }

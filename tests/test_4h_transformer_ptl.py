@@ -9,10 +9,10 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from btc_4h_model_adapters import TransformerClassifier
-from build_btc_4h_transformer_ptl import ProbabilityModel, load_lite, raw_windows, save_lite
+from build_4h_transformer_ptl import ProbabilityModel, load_lite, raw_windows, save_lite
 
 
-class Btc4hTransformerPtlTests(unittest.TestCase):
+class Transformer4hPtlTests(unittest.TestCase):
     def setUp(self):
         torch.manual_seed(0)
         self.model = TransformerClassifier(input_size=5, hidden_size=8, num_heads=2, sequence_length=4).eval()

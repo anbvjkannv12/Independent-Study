@@ -1,31 +1,36 @@
-# BTC 4h Transformer `.ptl` 行動端模型說明
+# 4h Transformer `.ptl` 行動端模型說明（BTC／ETH／SOL／XRP）
 
 > 更新日期：2026-09-30  
-> 狀態：**已在本機產生並通過驗證**（見第六節）。  
+> 狀態：**四個幣種都已在本機產生並通過驗證**（見第六節）。  
 > 對象：要把模型放進 App 或做展示的同學
 
 ---
 
 ## 一、先知道這幾件事
 
-1. **模型來源**：這是 5 年資料研究中 BTC 4h 的定案模型（Transformer）。資料、53 個特徵、模型結構與訓練設定，都和 4h 三模型比較（`scripts/train_btc_4h_model_comparison.py`、`logs/btc_4h_model_comparison.json`）完全相同。差別只在於這次用全部資料訓練一次，並把權重存了下來，原本的比較實驗不存權重。
+1. **模型來源**：四個幣種都用 5 年資料研究中的 4h Transformer。模型結構與訓練設定都和 4h 三模型比較（`scripts/train_btc_4h_model_comparison.py`，四個幣種的設定完全相同）一樣，差別只在於這次用全部資料訓練一次，並把權重存了下來；原本的比較實驗不存權重。
 2. **資料範圍**：只用到 2026-08-09 06:00 UTC 為止的資料，沒有用到之後的新資料，不影響 2027 年的新資料獨立驗證。
-3. **訊號很弱**：驗證期 ROC-AUC 約 0.540，和整個研究的結論一致（4h 方向訊號約 0.52～0.53，扣手續費後不具交易價值）。**只能當技術展示**，不能宣稱能預測價格或獲利。
-4. **輸出沒有經過機率校準**：輸出值可以用來排序（越高越偏向上漲），但不要解讀成「真實上漲機率」。
-5. **PyTorch Mobile（`.ptl` 使用的 lite interpreter）目前處於維護狀態**，官方新的行動端方案是 ExecuTorch。本機的 Windows torch 沒有 XNNPACK，所以匯出時跳過了 `optimize_for_mobile`；模型仍可由 lite interpreter 正常載入，且已驗證結果正確。
+3. **資料版本**：四個幣種都用 `data/features/<幣種>_4h.csv`，和預先登記實驗、前向測試凍結模型相同。ETH、SOL、XRP 的 4h 三模型比較（README 官方數字）用的是 `data/features/revisions/` 的校正檔；兩者只差 2021～2023 年的 40 列零成交量補值列，最近的資料完全相同。
+4. **訊號很弱**：驗證期 ROC-AUC 在 0.50～0.54 之間，SOL 等於隨機，和整個研究的結論一致（扣手續費後不具交易價值）。**只能當技術展示**，不能宣稱能預測價格或獲利。
+5. **輸出沒有經過機率校準**：輸出值可以用來排序（越高越偏向上漲），但不要解讀成「真實上漲機率」。
+6. **PyTorch Mobile（`.ptl` 使用的 lite interpreter）目前處於維護狀態**，官方新的行動端方案是 ExecuTorch。本機的 Windows torch 沒有 XNNPACK，所以匯出時跳過了 `optimize_for_mobile`；模型仍可由 lite interpreter 正常載入，且已驗證結果正確。
 
 ---
 
 ## 二、檔案
 
+每個幣種一個資料夾，`<幣種>` 是 `btc`、`eth`、`sol`、`xrp`：
+
 | 檔案 | 說明 |
 |---|---|
-| `models/btc_4h_transformer/btc_4h_transformer.ptl` | 行動端模型（約 75 KB） |
-| `models/btc_4h_transformer/btc_4h_transformer.ptl.json` | 輸入輸出規格、特徵順序、訓練區間、驗證 AUC |
-| `models/btc_4h_transformer/btc_4h_transformer.pth` | 原始 PyTorch 權重與標準化參數（約 53 KB） |
-| `scripts/build_btc_4h_transformer_ptl.py` | 訓練、存檔、匯出、驗證的一支程式 |
-| `tests/test_btc_4h_transformer_ptl.py` | 單元測試 |
-| `logs/ptl_btc_4h_verify.json` | 驗證結果（在資料壓縮檔裡） |
+| `models/<幣種>_4h_transformer/<幣種>_4h_transformer.ptl` | 行動端模型（約 75～78 KB） |
+| `models/<幣種>_4h_transformer/<幣種>_4h_transformer.ptl.json` | 輸入輸出規格、特徵順序、訓練區間、驗證 AUC、資料檔 |
+| `models/<幣種>_4h_transformer/<幣種>_4h_transformer.pth` | 原始 PyTorch 權重與標準化參數（約 53 KB） |
+| `scripts/build_4h_transformer_ptl.py` | 訓練、存檔、匯出、驗證的一支程式（可指定幣種） |
+| `tests/test_4h_transformer_ptl.py` | 單元測試 |
+| `logs/ptl_<幣種>_4h_verify.json` | 驗證結果（在資料壓縮檔裡） |
+
+四個 `.ptl` 的輸入輸出格式完全相同，App 只要寫一套程式，換檔案就能切換幣種。
 
 ---
 
@@ -36,13 +41,19 @@
 | 預測目標 | `close[t + 4] > close[t]`（4 小時後收盤價高於現在） |
 | 模型類別 | `TransformerClassifier`（`scripts/btc_4h_model_adapters.py`）：53 維 → 線性投影到 32 維 + 學習式位置參數 → 1 層 Transformer Encoder（4 heads，FFN 64）→ 取最後一個時間點 → 1 |
 | 訓練設定 | `ModelSettings()` 預設值：seed 42、序列長度 24、batch 128、最多 30 epochs、patience 5、學習率 0.001、hidden 32、heads 4 |
-| 訓練區間 | 2021-08-10 11:00 ～ 2026-02-23 14:00 UTC |
-| 驗證區間（early stopping） | 2026-02-23 15:00 ～ 2026-08-09 06:00 UTC（最後 4,000 列） |
-| 驗證期 ROC-AUC | 0.540（描述性） |
+| 驗證區間（early stopping） | 每個幣種最後 4,000 列，約 2026-02-23 ～ 2026-08-09 06:00 UTC |
+| 訓練區間 | 2021-08 ～ 驗證區間前一列（各幣種的確切時間見 `.ptl.json` 的 `training_coverage`） |
+
+| 幣種 | 驗證期 ROC-AUC（描述性） |
+|---|---:|
+| BTC | 0.540 |
+| ETH | 0.532 |
+| SOL | 0.500 |
+| XRP | 0.526 |
 
 ### 3.1 `.ptl` 的輸入與輸出
 
-匯出時把「標準化」與「sigmoid」都包進 `.ptl`，使用端不需要自己處理：
+匯出時把「標準化」與「sigmoid」都包進 `.ptl`，使用端不需要自己處理。每個幣種的標準化參數不同，**不能拿 A 幣種的特徵餵 B 幣種的模型**。
 
 | 項目 | 規格 |
 |---|---|
@@ -51,7 +62,7 @@
 | 輸出 | `(batch,)`，上漲分數（0～1，未校準） |
 | 顯示門檻 | 0.5（僅供顯示「偏多／偏空」，研究中沒有用它做判定） |
 
-### 3.2 53 個特徵的順序（必須完全一致）
+### 3.2 53 個特徵的順序（四個幣種相同，必須完全一致）
 
 與 `scripts/feature_engineering.py` 的 `EXPECTED_FEATURE_NAMES`、`logs/feature_manifest.json` 相同：
 
@@ -76,7 +87,7 @@
 18 dow_sin                 36 volume_change_lag_24
 ```
 
-使用端**不要手打這個順序**，一律從 `btc_4h_transformer.ptl.json` 的 `feature_columns` 讀取。
+使用端**不要手打這個順序**，一律從 `.ptl.json` 的 `feature_columns` 讀取。
 
 ---
 
@@ -86,14 +97,15 @@
 
 ```powershell
 $py = ".\.venv-transformer\Scripts\python.exe"
-& $py scripts\build_btc_4h_transformer_ptl.py
+& $py scripts\build_4h_transformer_ptl.py                       # 四個幣種
+& $py scripts\build_4h_transformer_ptl.py --symbols ETH         # 只做 ETH
 ```
 
-- 需要 `data/features/btc_4h.csv` 與 `logs/feature_manifest.json`（在資料壓縮檔裡）。
+- 需要 `data/features/<幣種>_4h.csv` 與 `logs/feature_manifest.json`（在資料壓縮檔裡）。
 - 程式會先確認特徵檔最後一列是 2026-08-09 06:00 UTC，不符就停止，避免用到之後的資料。
-- CPU 約 40 秒。
+- 每個幣種 CPU 約 40 秒到 1 分多鐘。
 - 產生 `.pth`、`.ptl`、`.ptl.json`，並自動執行第六節的驗證；驗證不通過就以錯誤結束。
-- 同樣設定、同樣 seed 重跑，應該得到相同結果。
+- **可重現**：同樣設定重跑，權重、標準化參數與 `.ptl` 輸出逐位元組相同（2026-09-30 以 BTC 實測確認）。檔案的 SHA-256 可能因為中繼資料不同而改變，但模型本身不變。
 
 ### 4.1 程式怎麼做
 
@@ -104,6 +116,8 @@ $py = ".\.venv-transformer\Scripts\python.exe"
 | 包裝 | `ProbabilityModel`：`sigmoid(model((x − mean) / scale))` | 使用端不會忘記標準化或把 logit 當機率 |
 | 匯出 | 關閉 Transformer fast path → `torch.jit.trace` → 嘗試 `optimize_for_mobile`（缺 XNNPACK 時跳過） | fast path 的融合運算子行動端不一定支援 |
 | 存檔 | 先存到使用者目錄底下的英文暫存資料夾，再複製回專案 | lite interpreter 無法開啟含中文的路徑 |
+
+`.pth` 可以用 PyTorch 預設的安全模式載入：`torch.load("models/eth_4h_transformer/eth_4h_transformer.pth")`。
 
 ---
 
@@ -118,15 +132,16 @@ import numpy as np
 import torch
 from torch.jit.mobile import _load_for_lite_interpreter
 
-ckpt = Path("models/btc_4h_transformer")
-spec = json.loads((ckpt / "btc_4h_transformer.ptl.json").read_text(encoding="utf-8"))
+symbol = "eth"                                   # btc / eth / sol / xrp
+ckpt = Path(f"models/{symbol}_4h_transformer")
+spec = json.loads((ckpt / f"{symbol}_4h_transformer.ptl.json").read_text(encoding="utf-8"))
 
 # lite interpreter 不能開中文路徑：先複製到英文路徑
 tmp = Path(tempfile.mkdtemp(dir=Path.home())) / "model.ptl"
-shutil.copyfile(ckpt / "btc_4h_transformer.ptl", tmp)
+shutil.copyfile(ckpt / f"{symbol}_4h_transformer.ptl", tmp)
 model = _load_for_lite_interpreter(str(tmp))
 
-# features: pandas DataFrame，由舊到新，至少 24 列，欄位包含 53 個特徵（見第七節）
+# features: 該幣種的 pandas DataFrame，由舊到新，至少 24 列，欄位包含 53 個特徵（見第七節）
 x = features[spec["feature_columns"]].tail(24).to_numpy(dtype=np.float32)   # (24, 53) 原始值
 score = float(model(torch.from_numpy(x).unsqueeze(0))[0])
 label = "偏多" if score >= spec["display_threshold"] else "偏空"
@@ -140,14 +155,15 @@ dependencies {
 }
 ```
 
-把 `btc_4h_transformer.ptl` 放進 `app/src/main/assets/`，啟動時複製到內部儲存空間（`LiteModuleLoader` 需要實體檔案路徑）：
+把四個 `.ptl` 放進 `app/src/main/assets/`，啟動時複製到內部儲存空間（`LiteModuleLoader` 需要實體檔案路徑）：
 
 ```kotlin
 import org.pytorch.IValue
 import org.pytorch.LiteModuleLoader
 import org.pytorch.Tensor
 
-val module = LiteModuleLoader.load(assetFilePath(context, "btc_4h_transformer.ptl"))
+val symbol = "eth"   // btc / eth / sol / xrp
+val module = LiteModuleLoader.load(assetFilePath(context, "${symbol}_4h_transformer.ptl"))
 // features: FloatArray，長度 24 * 53；時間由舊到新，每列 53 個特徵依 .ptl.json 的順序
 val input = Tensor.fromBlob(features, longArrayOf(1, 24, 53))
 val score = module.forward(IValue.from(input)).toTensor().dataAsFloatArray[0]
@@ -167,15 +183,16 @@ val score = module.forward(IValue.from(input)).toTensor().dataAsFloatArray[0]
 
 ## 六、驗證結果
 
-`scripts/build_btc_4h_transformer_ptl.py` 匯出後，會用 lite interpreter 載入 `.ptl`，並和訓練時的結果比對：
+`scripts/build_4h_transformer_ptl.py` 匯出後，會用 lite interpreter 載入 `.ptl`，並把驗證期全部 4,000 個原始特徵視窗送進去，和訓練時算出的機率比對；另外比較一次送 4 筆與一筆一筆送的結果：
 
-| 項目 | 方法 | 結果 |
-|---|---|---|
-| 與訓練結果一致 | 驗證期全部 4,000 個原始特徵視窗送進 `.ptl`，比較訓練時算出的機率 | 最大差距 **1.19e-07**（容許 1e-5） |
-| batch 一致 | 一次送 4 筆 vs 一筆一筆送 | 差距 **0** |
-| 判定 | | **PASS** |
+| 幣種 | 與訓練結果最大差距（容許 1e-5） | batch vs 單筆 | 判定 |
+|---|---:|---:|---|
+| BTC | 1.19e-07 | 0 | **PASS** |
+| ETH | 1.19e-07 | 0 | **PASS** |
+| SOL | 1.19e-07 | 0 | **PASS** |
+| XRP | 1.19e-07 | 0 | **PASS** |
 
-紀錄檔：`logs/ptl_btc_4h_verify.json`。
+紀錄檔：`logs/ptl_<幣種>_4h_verify.json`。
 
 ---
 
@@ -183,7 +200,7 @@ val score = module.forward(IValue.from(input)).toTensor().dataAsFloatArray[0]
 
 | 要求 | 說明 |
 |---|---|
-| 來源 | Binance Spot BTCUSDT 1 小時 K 線，UTC |
+| 來源 | Binance Spot `<幣種>USDT` 1 小時 K 線，UTC |
 | 只用已收盤的 K 線 | 最後一列必須是已經收盤的那一根 |
 | 歷史長度 | lag 與 rolling 最長用到 24～25 列，MACD 的指數平均需要更長暖機；**建議至少取最近 300 根 K 線**再算特徵 |
 | 缺口 | 依專案規則補值（`scripts/impute_missing_klines.py`：價格沿用前一根收盤、成交量補 0） |
@@ -199,7 +216,7 @@ import pandas as pd
 sys.path.insert(0, "scripts")
 from live_pipeline import live_features
 
-processed = pd.read_csv("data/live/processed/btc_1h.csv")   # 補值後的連續 1 小時 K 線
+processed = pd.read_csv("data/live/processed/eth_1h.csv")   # 該幣種補值後的連續 1 小時 K 線
 features = live_features(processed)                           # 53 欄，保留最新的列
 ```
 
@@ -214,10 +231,11 @@ features = live_features(processed)                           # 53 欄，保留�
 | Android 出現 `bytecode version` 錯誤 | 匯出的 bytecode 版本比 App runtime 新 | Python：`from torch.jit.mobile import _get_model_bytecode_version, _backport_for_mobile`；用 `_backport_for_mobile("in.ptl", "out.ptl", to_version=<runtime 支援的版本>)` 降版，再重新驗證 |
 | 輸入形狀錯誤 | 少了 batch 維度或欄位數不是 53 | 輸入必須是 `(1, 24, 53)` |
 | 輸出 NaN | 輸入有 NaN／無限大 | 檢查歷史長度與缺口補值 |
+| 分數怪怪的 | 把某個幣種的特徵餵給另一個幣種的模型 | 模型與特徵的幣種必須一致 |
 | 結果和 Python 端不同 | 特徵順序錯、用了未收盤 K 線、重複標準化、沒有用 `keep_unlabeled=True` | 對照第七節逐項檢查 |
 
 ---
 
 ## 九、展示時的說明文字（建議直接使用）
 
-> 本展示模型為 5 年資料研究中的 BTC 4 小時方向分類 Transformer，驗證期 ROC-AUC 約 0.54，屬微弱訊號、未經機率校準，僅用於展示模型部署流程，不構成投資建議。
+> 本展示模型為 5 年資料研究中的 4 小時方向分類 Transformer（BTC、ETH、SOL、XRP 各一個），驗證期 ROC-AUC 約 0.50～0.54，屬微弱訊號、未經機率校準，僅用於展示模型部署流程，不構成投資建議。

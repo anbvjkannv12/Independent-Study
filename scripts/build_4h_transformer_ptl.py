@@ -1,12 +1,14 @@
-"""Train the 5-year BTC 4h Transformer, save its weights, export a PyTorch Lite (.ptl) model and verify it.
+"""Train a 5-year 4h Transformer per coin, save its weights, export a PyTorch Lite (.ptl) model and verify it.
 
 Uses the same data, features, model and settings as the 5-year 4h model comparison
-(scripts/train_btc_4h_model_comparison.py), trained once on all rows up to 2026-08-09 06:00 UTC.
+(scripts/train_btc_4h_model_comparison.py), trained once on all rows of data/features/<coin>_4h.csv
+(up to 2026-08-09 06:00 UTC). Usage: python scripts/build_4h_transformer_ptl.py --symbols BTC ETH SOL XRP
 The .ptl takes RAW features of shape (batch, 24, 53) and returns the up-probability for
 close[t + 4] > close[t]; scaling and sigmoid are baked in. See docs/handover/ptl_guide.md.
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import shutil
@@ -26,13 +28,8 @@ from btc_4h_model_adapters import ModelSettings, TransformerClassifier, _fit_pre
 from train_btc_4h_baseline import load_baseline_dataset
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / "data" / "features" / "btc_4h.csv"
 MANIFEST = ROOT / "logs" / "feature_manifest.json"
-OUT_DIR = ROOT / "models" / "btc_4h_transformer"
-PTH = OUT_DIR / "btc_4h_transformer.pth"
-PTL = OUT_DIR / "btc_4h_transformer.ptl"
-SPEC = OUT_DIR / "btc_4h_transformer.ptl.json"
-VERIFY_LOG = ROOT / "logs" / "ptl_btc_4h_verify.json"
+SYMBOLS = ("BTC", "ETH", "SOL", "XRP")
 CUTOFF = pd.Timestamp("2026-08-09 06:00", tz="UTC")
 VALIDATION_ROWS = 4000
 TOLERANCE = 1e-5
@@ -82,12 +79,17 @@ def load_lite(path: Path):
         return _load_for_lite_interpreter(str(tmp_path))
 
 
-def main() -> None:
+def build(symbol: str) -> None:
+    s = symbol.lower()
+    DATA = ROOT / "data" / "features" / f"{s}_4h.csv"
+    OUT_DIR = ROOT / "models" / f"{s}_4h_transformer"
+    PTH, PTL, SPEC = (OUT_DIR / f"{s}_4h_transformer{ext}" for ext in (".pth", ".ptl", ".ptl.json"))
+    VERIFY_LOG = ROOT / "logs" / f"ptl_{s}_4h_verify.json"
     dataset, features = load_baseline_dataset(DATA, MANIFEST)
     if len(features) != 53 or dataset.open_time.iloc[-1] != CUTOFF:
-        raise ValueError("expected the frozen 53-feature BTC 4h dataset ending 2026-08-09 06:00 UTC")
+        raise ValueError(f"expected the frozen 53-feature {symbol} 4h dataset ending 2026-08-09 06:00 UTC")
     train, validation = dataset.iloc[:-VALIDATION_ROWS], dataset.iloc[-VALIDATION_ROWS:]
-    settings = ModelSettings()  # identical to logs/btc_4h_model_comparison.json model_settings
+    settings = ModelSettings()  # identical to model_settings in every coin's 4h comparison log
 
     _set_seed(settings.seed)
     model = TransformerClassifier(len(features), settings.hidden_size, settings.num_heads, settings.sequence_length)
@@ -101,6 +103,7 @@ def main() -> None:
                 "validation_start": str(validation.open_time.iloc[0]), "validation_end": str(validation.open_time.iloc[-1])}
     torch.save({
         "format_version": 1,
+        "symbol": symbol,
         "model_class": "scripts/btc_4h_model_adapters.py:TransformerClassifier",
         "model_config": {"input_size": len(features), "hidden_size": settings.hidden_size,
                          "num_heads": settings.num_heads, "sequence_length": settings.sequence_length},
@@ -112,7 +115,7 @@ def main() -> None:
         "validation_auc": validation_auc,
         "settings": vars(settings),
         "data_sha256": hashlib.sha256(DATA.read_bytes()).hexdigest(),
-        "torch_version": torch.__version__,
+        "torch_version": str(torch.__version__),
     }, PTH)
 
     wrapper = ProbabilityModel(model, scaler.mean_, scaler.scale_).eval()
@@ -123,10 +126,12 @@ def main() -> None:
     optimization = save_lite(traced, PTL)
 
     SPEC.write_text(json.dumps({
+        "symbol": symbol,
         "model_file": PTL.name,
+        "data_file": f"data/features/{s}_4h.csv",
         "source_checkpoint": PTH.name,
         "source_checkpoint_sha256": hashlib.sha256(PTH.read_bytes()).hexdigest(),
-        "torch_version": torch.__version__,
+        "torch_version": str(torch.__version__),
         "mobile_optimization": optimization,
         "input": {"shape": ["batch", settings.sequence_length, len(features)], "dtype": "float32",
                   "scaling": "none - pass RAW feature values; scaling is inside the model",
@@ -153,11 +158,18 @@ def main() -> None:
         "windows": len(ptl_prob), "max_abs_diff_ptl_vs_training": max_diff, "batch_vs_single": batch_diff,
         "tolerance": TOLERANCE, "validation_auc": validation_auc, "mobile_optimization": optimization,
         "status": "PASS" if passed else "FAIL"}, indent=2), encoding="utf-8")
-    print(f"validation_auc={validation_auc:.6f} windows={len(ptl_prob)} max|ptl - training|={max_diff:.2e} "
+    print(f"{symbol}: validation_auc={validation_auc:.6f} windows={len(ptl_prob)} max|ptl - training|={max_diff:.2e} "
           f"batch_vs_single={batch_diff:.2e} optimization={optimization}")
     if not passed:
-        raise SystemExit("FAIL: .ptl output differs from the trained model")
+        raise SystemExit(f"FAIL: {symbol} .ptl output differs from the trained model")
     print("PASS")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--symbols", nargs="+", choices=SYMBOLS, default=list(SYMBOLS))
+    for symbol in parser.parse_args().symbols:
+        build(symbol)
 
 
 if __name__ == "__main__":
