@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -31,7 +32,7 @@ def independent_holm(p_values: dict[str, float]) -> dict[str, float]:
 def verify(root: Path = ROOT) -> dict:
     output = root / "logs/multi_horizon"
     report = json.loads((output / "multi_asset_multi_horizon.json").read_text(encoding="utf-8"))["symbols"]
-    markdown = (root / "docs/multi_horizon_comparison_results.md").read_text(encoding="utf-8")
+    markdown = (root / "docs/experiments/multi_horizon/multi_horizon_comparison_results.md").read_text(encoding="utf-8")
     errors: dict[str, list[str]] = {f"V{i}": [] for i in range(1, 9)}
     gaps: dict[str, dict[str, dict[str, int]]] = {}
 
@@ -40,7 +41,8 @@ def verify(root: Path = ROOT) -> dict:
             errors[f"V{number}"].append(detail)
 
     completed = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"],
-                               cwd=root, text=True, capture_output=True)
+                               cwd=root, text=True, capture_output=True, encoding="utf-8", errors="replace",
+                               env={**os.environ, "PYTHONIOENCODING": "utf-8"})
     check(1, completed.returncode == 0, f"unittest returncode={completed.returncode}: {completed.stderr[-2500:]}")
     signal_p = {}
     for symbol in SYMBOLS:

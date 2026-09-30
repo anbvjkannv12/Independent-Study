@@ -262,7 +262,7 @@ def main() -> int:
     write_report_atomically({"symbols": reports, "signal_holm_scope": "all requested symbol-horizon cells",
                              "comparison_holm_scope": "three comparisons per symbol"},
                             args.output_dir / "multi_asset_multi_horizon.json")
-    path = Path("docs/multi_horizon_comparison_results.md")
+    path = Path("docs/experiments/multi_horizon/multi_horizon_comparison_results.md")
     path.write_text(render_report(reports, args), encoding="utf-8")
     return 0
 

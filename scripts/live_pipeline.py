@@ -1,4 +1,4 @@
-"""Live data update and forward-test pipeline (docs/next_phase_work_plan.md, work B).
+"""Live data update and forward-test pipeline (see docs/handover/handover.md, appendix D).
 
 Subcommands:
   init     copy raw history, train the frozen model (once) and the first rolling model

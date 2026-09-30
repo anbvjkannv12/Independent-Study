@@ -102,7 +102,7 @@ class ModelComparisonCliTests(unittest.TestCase):
 
 class ComparisonDocumentationTests(unittest.TestCase):
     def test_comparison_documentation_and_notebook_are_read_only(self):
-        documentation = (PROJECT_ROOT / "docs" / "btc_4h_model_comparison.md").read_text(
+        documentation = (PROJECT_ROOT / "docs" / "experiments" / "4h_model_comparison" / "btc_4h_model_comparison.md").read_text(
             encoding="utf-8"
         )
         notebook = json.loads(

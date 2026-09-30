@@ -3,7 +3,7 @@
 Uses the same data, features, model and settings as the 5-year 4h model comparison
 (scripts/train_btc_4h_model_comparison.py), trained once on all rows up to 2026-08-09 06:00 UTC.
 The .ptl takes RAW features of shape (batch, 24, 53) and returns the up-probability for
-close[t + 4] > close[t]; scaling and sigmoid are baked in. See docs/ptl_guide.md.
+close[t + 4] > close[t]; scaling and sigmoid are baked in. See docs/handover/ptl_guide.md.
 """
 from __future__ import annotations
 

@@ -547,7 +547,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", type=Path, default=Path("data/features"))
     parser.add_argument("--manifest", type=Path, default=Path("logs/feature_manifest.json"))
     parser.add_argument("--output-dir", type=Path, default=Path("logs/ab"))
-    parser.add_argument("--report", type=Path, default=Path("docs/feature_ab_test_results.md"))
+    parser.add_argument("--report", type=Path, default=Path("docs/experiments/feature_tests/feature_ab_test_results.md"))
     parser.add_argument("--initial-train-rows", type=int, default=19755)
     parser.add_argument("--validation-rows", type=int, default=4000)
     parser.add_argument("--test-rows", type=int, default=4000)

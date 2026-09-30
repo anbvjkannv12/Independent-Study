@@ -187,7 +187,7 @@ class DocumentationTests(unittest.TestCase):
         self.assertIn("XRPUSDT", readme)
         self.assertIn("不使用", readme)
         self.assertIn("API key", readme)
-        self.assertIn("時程.md", agement)
+        self.assertIn("交接使用說明.md", agement)
 
     def test_run_notebook_is_valid_json(self):
         notebook = json.loads((PROJECT_ROOT / "run" / "01_fetch_and_validate.ipynb").read_text(encoding="utf-8"))

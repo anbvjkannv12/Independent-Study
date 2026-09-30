@@ -39,5 +39,5 @@ data/
 
 ## 整理原則
 
-1. 5 年資料集中放到 `data/`，不進 git，另以資料壓縮檔交接（見 `docs/handover.md`）。
+1. 5 年資料集中放到 `data/`，不進 git，另以資料壓縮檔交接（見 `docs/handover/handover.md`）。
 2. 實驗結果放在 `logs/`，模型放在 `models/`。

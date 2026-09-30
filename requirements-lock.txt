@@ -1,3 +1,6 @@
+# 完整套件版本（Python 3.12）。安裝：python -m pip install -r requirements-lock.txt
+# torch 使用 CUDA 12.6 版本，需要 PyTorch 官方套件來源：
+--extra-index-url https://download.pytorch.org/whl/cu126
 absl-py==2.4.0
 asttokens==3.0.1
 astunparse==1.6.3

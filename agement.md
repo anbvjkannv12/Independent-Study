@@ -45,7 +45,7 @@
 1. 完成四個主流幣種的五年資料蒐集與品質檢查。
 2. 處理缺失值、時間戳同步與資料清理，建立可訓練版本資料集。
 3. 完成探索性資料分析與特徵工程，例如 RSI、MACD、Bollinger Bands、ATR、lag features 與時間特徵。
-4. 明確定義預測目標：資料粒度固定為 1 小時 K 線，主要報告的預測目標視窗為「未來 4 小時」漲跌方向（`target_up`）。`1h`、`12h`、`24h` 已於 2026-09-28 以預先登記的多視窗比較完成評估：只有 XRP 1h 穩定強過 4h，因此 4h 維持主要視窗，1h 列為待新資料驗證的候選（見 `docs/multi_horizon_conclusions.md`）。
+4. 明確定義預測目標：資料粒度固定為 1 小時 K 線，主要報告的預測目標視窗為「未來 4 小時」漲跌方向（`target_up`）。`1h`、`12h`、`24h` 已於 2026-09-28 以預先登記的多視窗比較完成評估：只有 XRP 1h 穩定強過 4h，因此 4h 維持主要視窗，1h 列為待新資料驗證的候選（見 `docs/experiments/multi_horizon/multi_horizon_conclusions.md`）。
 5. 以時間序列切分與 walk-forward validation 進行模型訓練與驗證，避免資料洩漏。
 6. 優先完成價格預測模型，可先從 `XGBoost`、`LSTM`、`Transformer` 中挑選可落地模型逐步實作。
 7. 若基礎模型表現穩定，再考慮 `Stacking` 融合作為加強版，而不是本階段硬性完成項目。**截至 2026-09-30，特徵檢驗（外部特徵 A/B、特徵消融 v1、v2）與三段式目標設計皆已完成，都沒有找到穩定的改善；基礎模型始終未達「表現穩定」的標準，因此本階段不做 Stacking 融合（詳見下方 2026-09-16～09-30 進度）。**
@@ -69,7 +69,7 @@
 
 ## 時程
 
-詳細安排請見 [時程.md](時程.md)。
+階段排程紀錄 `時程.md` 已於 2026-09-30 自 repo 移除（可在 git 歷史中查到）；現況與後續工作見 [交接使用說明.md](交接使用說明.md) 與 [docs/handover/handover.md](docs/handover/handover.md)。
 
 ## 2026-08-10 資料時間缺口處理決策
 
@@ -113,7 +113,7 @@ C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\py
 - 產生正式特徵輸出於 `data/features/`，共 16 份 CSV：4 個幣種乘上 4 個 horizon。
 - 產生特徵 manifest：`logs/feature_manifest.json`，記錄特徵名稱、標籤定義、horizon、輸入輸出路徑、列數與補值列數。
 - 新增測試 `tests/test_feature_engineering.py`，檢查 53 個特徵契約、標籤公式、欄位順序、缺漏欄位防呆，以及輸出 manifest。
-- 新增使用說明 `docs/feature_engineering.md`，記錄特徵流程執行指令與輸出格式。
+- 新增使用說明 `docs/data_features/feature_engineering.md`，記錄特徵流程執行指令與輸出格式。
 
 重要決策如下：
 
@@ -138,20 +138,20 @@ C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\py
 
 完成內容如下：
 
-- 建立 BTCUSDT 4 小時方向分類 XGBoost baseline（`scripts/train_btc_4h_baseline.py`），採時間順序 70%／15%／15% 切分，測試集 ROC-AUC 僅 0.516，評估結論明確寫為「尚不足以支撐交易決策」（詳見 `docs/btc_4h_baseline_review_2026-08-19.md`）。
+- 建立 BTCUSDT 4 小時方向分類 XGBoost baseline（`scripts/train_btc_4h_baseline.py`），採時間順序 70%／15%／15% 切分，測試集 ROC-AUC 僅 0.516，評估結論明確寫為「尚不足以支撐交易決策」。
 - 隨即建立 XGBoost／LSTM／Transformer 三模型 expanding-window walk-forward 比較流程（`scripts/btc_4h_evaluation.py`、`scripts/btc_4h_model_adapters.py`），機率校準（Platt scaling）與門檻選擇僅用 validation，test 完全不參與，並同時比較永遠上漲、訓練集多數類別、前一期方向、Logistic Regression、零交易五種基準。
-- 已對 BTC、ETH、SOL、XRP 四個幣種完成 4 小時方向分類的三模型 walk-forward 比較（詳見 `docs/multi_asset_4h_model_comparison.md`），三個 test folds 平均 ROC-AUC 介於 0.50（SOL，接近隨機）至 0.53（BTC/ETH）之間，XRP 亦僅有極微弱訊號；深度模型未在四個幣種中穩定勝過 XGBoost。
+- 已對 BTC、ETH、SOL、XRP 四個幣種完成 4 小時方向分類的三模型 walk-forward 比較（詳見 `docs/experiments/4h_model_comparison/multi_asset_4h_model_comparison.md`），三個 test folds 平均 ROC-AUC 介於 0.50（SOL，接近隨機）至 0.53（BTC/ETH）之間，XRP 亦僅有極微弱訊號；深度模型未在四個幣種中穩定勝過 XGBoost。
 
 **目前訊號強度尚未達到可支撐交易或風險預警宣稱的水準**，這是本階段最重要的誠實現況，後續報告與計畫書敘述都應據實呈現，不誇大結果。
 
-下一步（依 `docs/btc_4h_baseline_review_2026-08-19.md` 建議，取代原本「表現穩定即上 Stacking」的預設路徑）：
+下一步（依當時的 baseline 檢討建議，取代原本「表現穩定即上 Stacking」的預設路徑）：
 
 1. 檢查各 fold 的正類比例、特徵漂移與高低機率分位的實際上漲率，確認訊號薄弱是特徵／標籤問題還是市場本身雜訊過高。
 2. 評估改用「顯著上漲／下跌／不交易」三段式目標，避免把接近零的雜訊報酬硬分為方向。
 3. 在上述檢驗完成、且有 fold 穩定優於基準的證據之前，暫不進入 Stacking 融合，也不對 1h／12h／24h 視窗另行建模。
 4. 報告與計畫書中若引用本階段結果，一律使用上述真實數字（ROC-AUC 0.50–0.53），不得以其他章節（如穩定幣模組）的績效數據替代或混用。
 
-**執行方式調整（2026-09-10；2026-09-30 回顧）**：BTC 曾依當時結果選定 **Transformer** 為定案模型，後續改為「一個幣種一個幣種依序完成」，依序處理 ETH → SOL → XRP。四幣種模型定案與結果整理已於 2026-09 完成；更嚴格的後續比較顯示三模型差距在雜訊範圍內，因此最終總結不宣稱 Transformer 有可靠優勢。詳細排程請見 [時程.md](時程.md)。
+**執行方式調整（2026-09-10；2026-09-30 回顧）**：BTC 曾依當時結果選定 **Transformer** 為定案模型，後續改為「一個幣種一個幣種依序完成」，依序處理 ETH → SOL → XRP。四幣種模型定案與結果整理已於 2026-09 完成；更嚴格的後續比較顯示三模型差距在雜訊範圍內，因此最終總結不宣稱 Transformer 有可靠優勢。詳細排程請見 `時程.md`（已移除）。
 
 ## 2026-09-16 外部訊號（鏈上／情緒／衍生品）納入資料範圍
 
@@ -175,13 +175,13 @@ C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\py
 
 | 日期 | 實驗 | 結果 | 文件 |
 | --- | --- | --- | --- |
-| 2026-09-16 | 外部特徵 A/B（鏈上、情緒、衍生品） | 沒有證據顯示能穩定改善 4h ROC-AUC | `docs/external_features_ab_comparison.md` |
-| 2026-09-25 | 特徵消融 v1 | 沒有特徵群的移除能穩定改善 | `docs/feature_ab_test_results.md` |
+| 2026-09-16 | 外部特徵 A/B（鏈上、情緒、衍生品） | 沒有證據顯示能穩定改善 4h ROC-AUC | `docs/experiments/feature_tests/external_features_ab_comparison.md` |
+| 2026-09-25 | 特徵消融 v1 | 沒有特徵群的移除能穩定改善 | `docs/experiments/feature_tests/feature_ab_test_results.md` |
 | 2026-09-26 | 特徵消融 v2 | 20 個組合中 0 個通過全部預定判準 | 總報告第四節 |
-| 2026-09-28 | 多視窗比較（1h／4h／12h／24h） | 1h 四幣種都通過訊號關卡，只有 XRP 1h 穩定強過 4h；12h、24h 沒有更好。輸出經獨立程式驗證（V1～V8 全部 PASS） | `docs/multi_horizon_conclusions.md` |
-| 2026-09-28 | 重訓頻率（固定模型 vs 每 167／42／7 天重訓） | 12 個組合中 0 個通過；ΔAUC +0.001～+0.009，不顯著 | `docs/retrain_frequency_conclusions.md` |
-| 2026-09-28 | 三段式目標（上漲／下跌／不交易，扣來回 0.2% 手續費） | 四幣種每筆淨報酬 −0.15%～−0.22%，沒有幣種通過；統計分析錯誤已依 v2 勘誤修正，結論不變 | `docs/three_class_target_conclusions.md` |
-| 2026-09-30 | 持續更新資料與前向測試流程 | 程式完成（`scripts/live_pipeline.py`），凍結模型已建立；自動排程尚未啟用 | `docs/next_phase_work_plan.md` 工作 B |
+| 2026-09-28 | 多視窗比較（1h／4h／12h／24h） | 1h 四幣種都通過訊號關卡，只有 XRP 1h 穩定強過 4h；12h、24h 沒有更好。輸出經獨立程式驗證（V1～V8 全部 PASS） | `docs/experiments/multi_horizon/multi_horizon_conclusions.md` |
+| 2026-09-28 | 重訓頻率（固定模型 vs 每 167／42／7 天重訓） | 12 個組合中 0 個通過；ΔAUC +0.001～+0.009，不顯著 | `docs/experiments/retrain_frequency/retrain_frequency_conclusions.md` |
+| 2026-09-28 | 三段式目標（上漲／下跌／不交易，扣來回 0.2% 手續費） | 四幣種每筆淨報酬 −0.15%～−0.22%，沒有幣種通過；統計分析錯誤已依 v2 勘誤修正，結論不變 | `docs/experiments/three_class_target/three_class_target_conclusions.md` |
+| 2026-09-30 | 持續更新資料與前向測試流程 | 程式完成（`scripts/live_pipeline.py`），凍結模型已建立；自動排程尚未啟用 | `docs/handover/handover.md` 附錄 D |
 
 **本階段總結論**：在嚴格防止資料洩漏的條件下，K 線衍生特徵對主流幣未來 4 小時漲跌只有統計上微弱的訊號（ROC-AUC 約 0.52）。每筆交易扣手續費前的優勢約 0.01%～0.05%，遠小於 0.2% 的來回手續費。更換模型、特徵、預測視窗、重訓頻率與標籤設計，都沒有穩定改善。瓶頸在資料本身的資訊量，而不是模型或訓練方式。
 
@@ -189,4 +189,4 @@ C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\py
 
 **查核發現**：`data/features/*_4h.csv` 由較舊版特徵程式產生，零成交量補值列的處理與現行程式不同（影響約 40 列，都在 2021～2023 年）；2026-08-02 之後兩者逐列一致。報告的研究限制與新資料驗證的預先登記需註明。
 
-**研究主線已收尾。**接下來的工作（備份、文件同步、報告圖表、專題報告、簡報與口試、可重現性檢查，以及 2027-01-25 之後的新資料獨立驗證）詳見 [docs/final_stage_work_plan.md](docs/final_stage_work_plan.md)。2027-01-25 之前，不得使用 2026-08-09 之後的資料做任何調參、選特徵或修改判定規則。
+**研究主線已收尾。**接下來的工作（備份、文件同步、報告圖表、專題報告、簡報與口試、可重現性檢查，以及 2027-01-25 之後的新資料獨立驗證）詳見 [交接使用說明.md](交接使用說明.md) 與 [docs/handover/handover.md](docs/handover/handover.md)。2027-01-25 之前，不得使用 2026-08-09 之後的資料做任何調參、選特徵或修改判定規則。

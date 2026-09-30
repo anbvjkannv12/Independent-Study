@@ -217,7 +217,7 @@ def main() -> int:
     write_report_atomically({"symbols": reports, "total_wall_seconds": time.monotonic() - start,
                              "selection": "first group in R4000,R1000,R168 passing at least 2 assets"},
                             args.output_dir / "multi_asset_retrain_frequency.json")
-    path = Path("docs/retrain_frequency_results.md")
+    path = Path("docs/experiments/retrain_frequency/retrain_frequency_results.md")
     path.write_text(render_report(reports), encoding="utf-8")
     return 0
 

@@ -215,7 +215,7 @@ def main() -> int:
     parser.add_argument("--data-dir", type=Path, default=Path("data/features"))
     parser.add_argument("--manifest", type=Path, default=Path("logs/feature_manifest.json"))
     parser.add_argument("--output-dir", type=Path, default=Path("logs/volatility_target"))
-    parser.add_argument("--report", type=Path, default=Path("docs/volatility_target_extension_results.md"))
+    parser.add_argument("--report", type=Path, default=Path("docs/experiments/volatility_target/volatility_target_extension_results.md"))
     parser.add_argument("--purge-rows", type=int, default=24)
     args = parser.parse_args()
     if args.purge_rows < 24:

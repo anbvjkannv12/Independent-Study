@@ -394,7 +394,7 @@ def run_symbol(symbol: str, args: argparse.Namespace) -> dict[str, object]:
     return analyse_symbol(result, output_dir, args.multi_horizon_json)
 
 
-def aggregate(output_dir: Path, report_path: Path = Path("docs/three_class_target_results.md")) -> dict[str, object]:
+def aggregate(output_dir: Path, report_path: Path = Path("docs/experiments/three_class_target/three_class_target_results.md")) -> dict[str, object]:
     reports = {}
     for sym in SYMBOLS:
         path = output_dir / sym.lower() / "three_class_target_comparison.json"

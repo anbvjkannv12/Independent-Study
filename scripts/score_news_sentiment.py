@@ -7,7 +7,7 @@ which ``external_features.py`` picks up automatically.
 
     python scripts/score_news_sentiment.py --input news.csv --symbol btcusdt
 
-Needs ``transformers`` (not in requirements-model-comparison.txt):
+Needs ``transformers`` (not in requirements-lock.txt):
 
     pip install transformers
 """
