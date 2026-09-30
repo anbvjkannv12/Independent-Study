@@ -13,17 +13,3 @@ artifacts/
 .venv/
 models/live/
 backup_manifest.json
-
-# 3 年資料階段的資料與模型：保留在本機，不放進 GitHub（2026-09-30）
-舊專題_3年資料/
-models/btc_24h_pytorch_transformer/
-models/popular_coins/
-models/smoke_test_new_plan/
-models/smoke_test_new_plan_lstm/
-models/smoke_test_new_plan_transformer/
-models/week3_naive_xgboost/
-models/week4_lstm/
-models/week5_transformer/
-models/調整後(預測4,12,24小時)/
-models/result_summary_and_conclusion.ipynb
-models/.ipynb_checkpoints/

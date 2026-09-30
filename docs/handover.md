@@ -18,14 +18,13 @@
 
 | 部分 | 內容 | 取得方式 |
 |---|---|---|
-| **GitHub repo** | 所有程式碼、文件、報告初稿、圖表、4h 實驗程式與小型設定檔、完整 git 歷史（不含 3 年資料階段的模型與資料） | `git clone` |
+| **GitHub repo** | 所有程式碼、文件、報告初稿、圖表、4h 實驗程式、BTC 4h Transformer 權重與 `.ptl`、完整 git 歷史 | `git clone` |
 | **資料壓縮檔** `專題_資料_2026-09-30.zip`（約 667 MB） | `data/`（原始、補值後、特徵、外部、即時更新資料，解壓後約 1.8 GB）、`logs/`（所有實驗結果，約 210 MB）、`models/live/`（凍結與滾動模型）、`data_manifest.json`（每個檔案的 SHA-256） | 原作者另外提供（例如雲端硬碟） |
 
 為什麼分開：`data/`、`logs/`、`models/live/` 合計約 2 GB，放進 git 會讓每次 clone 都要下載，而且這些資料已經定案、不需要版本控制，所以 `.gitignore` 排除了它們。**只 clone 程式碼的話，看不到任何實驗結果，驗證程式也跑不了**，一定要解壓資料壓縮檔。
 
 資料壓縮檔的 SHA-256：`ac842ca418b6312b45c83e78a37a0f5623b881742a47fccddbeffd3ab51600f9`。收到後可以先用 `Get-FileHash 專題_資料_2026-09-30.zip -Algorithm SHA256` 比對，確認檔案沒有傳壞。
 
-資料壓縮檔**不包含 3 年資料階段的任何資料**。
 
 不需要、也不在任何地方提供的東西：
 
@@ -125,10 +124,9 @@
 
 | 模型 | 位置 | 格式 | 說明 |
 |---|---|---|---|
-| BTC 24h PyTorch Transformer（`.pth`、`.pkl`、`.ptl`） | `models/btc_24h_pytorch_transformer/checkpoints/` | — | （3 年資料階段，依原作者決定不放在 GitHub，也不在資料壓縮檔；原作者電腦仍保有，需要時向原作者索取） |
+| BTC 4h Transformer（5 年資料） | `models/btc_4h_transformer/` | `.pth`（權重＋標準化參數）、`.ptl`（行動端）、`.ptl.json`（規格） | 由 `scripts/build_btc_4h_transformer_ptl.py` 產生；說明見 `docs/ptl_guide.md` |
 | 凍結 4h XGBoost（四幣種） | `models/live/*_4h_frozen.json` | XGBoost JSON | **工作 8 的驗證依據，不可重訓或覆寫**；SHA-256 在 `models/live/frozen_manifest.json` |
 | 滾動 4h XGBoost（四幣種） | `models/live/*_4h_rolling_*.json` ＋ `.meta.json` | XGBoost JSON | 前向測試用，meta 記錄訓練範圍 |
-| 3 年資料階段其他模型與結果 | `models/popular_coins/`、`models/week3～5*/`、`models/smoke_test_new_plan*/`、`models/調整後(預測4,12,24小時)/` | — | （3 年資料階段，依原作者決定不放在 GitHub，也不在資料壓縮檔；原作者電腦仍保有，需要時向原作者索取） |
 
 **注意**：4h 三模型比較（XGBoost／LSTM／Transformer 的 walk-forward）與之後的預先登記實驗，**程式設計上不儲存模型權重**，只儲存逐列預測與結果 JSON（在 `logs/`）。要取得權重必須重新訓練；結果可重現，因為 seed 固定。
 
@@ -139,8 +137,7 @@
 | 4h 模型定義（XGBoost、LSTM、Transformer） | `scripts/btc_4h_model_adapters.py` |
 | walk-forward 切分、校準、評估 | `scripts/btc_4h_evaluation.py` |
 | 4h 三模型比較主程式 | `scripts/train_btc_4h_model_comparison.py` |
-| BTC 24h PyTorch Transformer 訓練與權重存取 | `src/train_btc_24h_pytorch_transformer.py`、`src/pytorch_transformer_artifacts.py` |
-| 3 年資料階段的訓練程式 | `src/` 其他檔案 |
+| BTC 4h Transformer 訓練、存檔與 `.ptl` 匯出 | `scripts/build_btc_4h_transformer_ptl.py` |
 | 各實驗主程式 | `scripts/run_*.py`（見第五節 5.3） |
 | 前向測試流程 | `scripts/live_pipeline.py` |
 
@@ -195,7 +192,6 @@
 | `logs/` | 所有實驗結果 | 報告的每個數字都來自這裡 |
 | `models/live/` | 凍結模型與滾動模型 | **凍結模型永遠不可重新訓練或覆寫** |
 | `run/` | 早期的執行用 notebook | |
-| `舊專題_3年資料/` | 前一階段（3 年資料）的 notebook | （3 年資料階段，依原作者決定不放在 GitHub，也不在資料壓縮檔；原作者電腦仍保有，需要時向原作者索取） |
 
 ### 5.3 主要程式
 
@@ -225,20 +221,18 @@
 | 備份 | 部分完成 | 程式碼在 GitHub；資料壓縮檔請至少存兩個地方（例如雲端硬碟與外接硬碟） |
 | 遠端 repo | 已設定 | https://github.com/anbvjkannv12/Independent-Study |
 | 即時預測展示 | 決定不做 | 需要時見 `final_stage_work_plan.md` 工作 7 |
-| `.ptl` 模型檔（PyTorch Lite） | 已完成 | 見下方 6.1；`max|ptl - pth|=5.96e-08`，batch_vs_single=0 |
+| `.ptl` 模型檔（PyTorch Lite） | 已完成 | 5 年資料 BTC 4h Transformer；見下方 6.1 |
 | 前端呈現 | 網站由同學保管 | 資料說明見 `docs/frontend_data_guide.md`（6.2） |
 | 新資料獨立驗證 | **2027-01-25 之後** | 見 `final_stage_work_plan.md` 工作 8；波動大小預測也應一起驗證 |
 
 ### 6.1 `.ptl` 模型檔（已完成，2026-09-30）
-> **注意**：BTC 24h Transformer 的 `.pth`、`.pkl`、`.ptl` 屬於 3 年資料階段，已從 GitHub 移除，也不在資料壓縮檔。repo 裡仍有匯出與驗證程式（`scripts/export_btc_24h_ptl.py`、`scripts/verify_btc_24h_ptl.py`）和說明文件，但要先向原作者取得模型檔，放回 `models/btc_24h_pytorch_transformer/checkpoints/` 才能執行。
 
-完整步驟見 **[`docs/ptl_guide.md`](ptl_guide.md)**（匯出程式、驗證程式、Python／Android／iOS 執行方式、輸入資料準備、常見問題）。重點：
+完整說明見 **[`docs/ptl_guide.md`](ptl_guide.md)**。重點：
 
-- 只有 BTC 24h Transformer（`models/btc_24h_pytorch_transformer/checkpoints/btc_24h_final.pth`）可以轉；它是 3 年資料階段的模型，不是 5 年 4h 主實驗的模型。
-- 匯出的 `.ptl` 會把標準化與 sigmoid 包進去：輸入原始特徵 `(1, 24, 53)`，輸出上漲機率。
-- 已產生 `models/btc_24h_pytorch_transformer/checkpoints/btc_24h_final.ptl` 與 `btc_24h_final.ptl.json`。
-- 驗證結果：`windows=200 max|ptl - pth|=5.96e-08 batch_vs_single=0.00e+00`，`PASS`。紀錄在 `logs/ptl_export_*.log` 與 `logs/ptl_verify_*.log`。
-- 由於目前 Windows torch build 沒有 XNNPACK，`optimize_for_mobile` 已自動跳過；模型仍可由 lite interpreter 載入並通過一致性驗證。
+- 模型是 5 年資料研究中 BTC 4h 的定案模型（Transformer），資料、特徵、結構與設定都和 4h 三模型比較相同，只用 2026-08-09 06:00 UTC 以前的資料訓練。
+- 檔案：`models/btc_4h_transformer/btc_4h_transformer.{pth,ptl,ptl.json}`，由 `scripts/build_btc_4h_transformer_ptl.py` 一次產生。
+- `.ptl` 已包含標準化與 sigmoid：輸入原始特徵 `(1, 24, 53)`，輸出 4 小時後上漲分數（未校準）。
+- 驗證：驗證期 4,000 個視窗，`.ptl` 和訓練結果最大差距 1.19e-07，batch 與單筆一致，PASS（`logs/ptl_btc_4h_verify.json`）。驗證期 ROC-AUC 約 0.540，屬微弱訊號，只能當展示。
 
 ### 6.2 前端呈現
 

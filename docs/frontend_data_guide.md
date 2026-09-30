@@ -27,15 +27,14 @@
 │  └─ feature_manifest.json       53 個特徵名稱
 ├─ models/
 │  ├─ live/                       4h XGBoost：凍結模型、滾動模型與 meta
-│  └─ btc_24h_pytorch_transformer/checkpoints/   ← 3 年資料階段的模型，只在本資料包提供，GitHub 沒有
-│     ├─ btc_24h_final.ptl        行動端模型
-│     ├─ btc_24h_final.ptl.json   .ptl 輸入輸出規格
-│     └─ btc_24h_final.pth / .pkl 原始 PyTorch 權重與前處理設定
+│  └─ btc_4h_transformer/
+│     ├─ btc_4h_transformer.ptl        行動端模型
+│     ├─ btc_4h_transformer.ptl.json   .ptl 輸入輸出規格
+│     └─ btc_4h_transformer.pth        原始 PyTorch 權重與標準化參數
 ├─ data/
 │  ├─ live/                       即時更新用的 K 線（raw、processed）
 │  └─ features/*_4h.csv           實驗用的 4h 特徵檔（更新程式做一致性檢查時需要）
-├─ scripts/                       更新預測資料的程式（live_pipeline.py 與相依模組）
-└─ src/                           .pth 載入與舊版特徵函式
+└─ scripts/                       更新預測資料的程式（live_pipeline.py 與相依模組）、.ptl 產生程式
 ```
 
 ---
@@ -47,7 +46,7 @@
 | 研究結果 | 四幣種模型 AUC、多視窗比較、三段式淨報酬、手續費損益兩平 | `docs/figures/*.png`、`figure_data.json` | 四 |
 | 即時預測 | 各幣種每小時的上漲機率與實際結果 | `logs/live/predictions.csv` | 三 |
 | 模型狀態 | 最新資料時間、凍結模型近 30 天 AUC | `live_pipeline.py status` | 六 |
-| 模型展示 | BTC 24h Transformer 的 `.ptl` | `models/btc_24h_pytorch_transformer/checkpoints/` | 五 |
+| 模型展示 | BTC 4h Transformer 的 `.ptl` | `models/btc_4h_transformer/` | 五 |
 | 聲明 | 研究展示、訊號微弱、不構成投資建議 | 固定文字 | 七 |
 
 ---
@@ -142,13 +141,13 @@ const btcFrozen = rows
 |---|---|---|---|---|
 | 4h XGBoost 凍結模型 | `models/live/<幣種>_4h_frozen.json` | 53 個特徵（單列，順序見 `logs/feature_manifest.json`） | 上漲機率 | 不行，需要 Python 後端 |
 | 4h XGBoost 滾動模型 | `models/live/<幣種>_4h_rolling_*.json` ＋ `.meta.json` | 同上 | 上漲機率 | 不行 |
-| BTC 24h Transformer | `btc_24h_final.ptl` | 原始特徵 `(1, 24, 53)` | 24 小時後上漲機率 | 不行；`.ptl` 給 Android／iOS 或 Python lite interpreter 用 |
+| BTC 4h Transformer | `models/btc_4h_transformer/btc_4h_transformer.ptl` | 原始特徵 `(1, 24, 53)` | 4 小時後上漲分數（未校準） | 不行；`.ptl` 給 Android／iOS 或 Python lite interpreter 用 |
 
 **建議**：網站不要自己跑模型，直接讀 `predictions.csv`。模型的預測已經由 `live_pipeline.py` 算好寫進去了。
 
 如果一定要在網站後端即時推論：
 - XGBoost：Python 用 `xgboost.XGBClassifier().load_model(路徑)`，特徵用 `scripts/live_pipeline.py` 的 `live_features()` 計算。
-- `.ptl`：完整做法見 `docs/ptl_guide.md`（已驗證和原模型一致，最大差距 5.96e-08）。注意 lite interpreter **不能開啟含中文的路徑**。
+- `.ptl`：完整做法見 `docs/ptl_guide.md`（已驗證和訓練結果一致，最大差距 1.19e-07）。注意 lite interpreter **不能開啟含中文的路徑**。
 
 **不可以**：重新訓練或覆寫凍結模型。它是 2027 年新資料驗證的依據，SHA-256 記在 `models/live/frozen_manifest.json`。
 

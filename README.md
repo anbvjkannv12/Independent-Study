@@ -96,10 +96,9 @@ config.json          抓取設定
 agement.md           研究範圍（權威文件）
 時程.md               階段排程與進度
 scripts/             資料管線與訓練程式
-src/                 沿用的訓練程式與實驗工具（LSTM／Transformer／multi-horizon）
-tests/               單元測試，對應 scripts/ 與 src/
+tests/               單元測試，對應 scripts/
 run/                 實際執行的 notebook（見 run/README.md）
-data/raw/            原始 K 線（*_5y.csv，另含舊專題 *_3y.csv）
+data/raw/            原始 K 線（*_5y.csv）
 data/processed/      補值後的連續資料
 data/features/       4 幣種 × 4 horizon 共 16 份特徵集
 data/external/       鏈上／情緒／衍生品原始序列（選配）
@@ -108,7 +107,6 @@ models/              模型、指標、validation report 與 manifest
 logs/                下載、品質、補值、特徵與比較結果 JSON
 docs/                方法論、各幣種比較文件與專題報告
 deps/                離線 wheel 與本地 XGBoost runtime
-舊專題_3年資料/        前一階段（3 年資料）的 notebook（不在 GitHub，僅保存在原作者電腦）
 ```
 
 ## 文件索引
@@ -121,13 +119,13 @@ deps/                離線 wheel 與本地 XGBoost runtime
 | [docs/five_year_4h_final_report.md](docs/five_year_4h_final_report.md) | 五年資料 4 小時方向分類階段報告 |
 | [docs/btc_4h_model_comparison.md](docs/btc_4h_model_comparison.md)・[eth](docs/eth_4h_model_comparison.md)・[sol](docs/sol_4h_model_comparison.md)・[xrp](docs/xrp_4h_model_comparison.md) | 各幣種三模型比較 |
 | [docs/external_signals.md](docs/external_signals.md) | 鏈上／情緒／衍生品外部訊號來源、特徵、防洩漏規則與限制 |
-| [docs/整合說明_舊專題參考.md](docs/整合說明_舊專題參考.md) | 新舊專題關係、哪些舊成果可沿用 |
+| [docs/ptl_guide.md](docs/ptl_guide.md) | BTC 4h Transformer 的 `.ptl` 行動端模型說明 |
 | [專題研究方法論審查報告.md](專題研究方法論審查報告.md) | 方法論審查 |
 | `docs/7_...docx` | 研究計畫書（長期願景，範圍以 `agement.md` 為準） |
 
-## 舊專題（3 年資料）
+## 前一階段
 
-同一研究的前一階段（2026-06～08），以 3 年資料跑過 XGBoost／LSTM／Transformer 在 1h／4h／12h／24h 的分類與回歸實驗。Notebook 全數集中在 `舊專題_3年資料/notebooks/`（含 `調整後(預測4,12,24小時)/` 多 horizon 比較），結論文件與訓練程式已併入 `docs/`、`src/`。兩階段結論方向一致，可作為報告的前期成果對照——詳見 [docs/整合說明_舊專題參考.md](docs/整合說明_舊專題參考.md)。
+本研究前一階段曾以 3 年資料做初步測試；本專案與報告僅使用 5 年資料與嚴格評估流程。
 
 ## 安全說明
 

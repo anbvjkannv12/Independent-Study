@@ -2,7 +2,7 @@
 
 > 建立日期：2026-09-20　｜　研究範圍權威文件：[agement.md](../agement.md)　｜　排程：[時程.md](../時程.md)
 >
-> 本計劃書只規劃 **4 小時漲跌方向分類**。不規劃回歸任務（舊專題已確認為負結果，見 [log_return_regression_comparison.md](log_return_regression_comparison.md)），也不規劃 1h／12h／24h 建模。
+> 本計劃書只規劃 **4 小時漲跌方向分類**。不規劃回歸任務，也不規劃 1h／12h／24h 建模。
 
 ## 1. 目標與範圍
 
@@ -37,7 +37,7 @@
 
 ## 3. 特徵清單摘要（引用 `logs/feature_manifest.json`）
 
-固定使用 manifest 記錄的 **53 個特徵**，順序不變。這 53 欄沿用舊專題 `src/lstm_experiment_utils.py` 的 `add_features()` 定義，**本計劃書不新增、不移除、不重新發明任何特徵**。
+固定使用 manifest 記錄的 **53 個特徵**，順序不變。這 53 欄的定義見 `scripts/feature_engineering.py` 的 `add_features()`，**本計劃書不新增、不移除、不重新發明任何特徵**。
 
 | 群組 | 欄位 | 數量 |
 | --- | --- | ---: |
@@ -67,47 +67,41 @@
 
 ### 4.1 XGBoost
 
-| 參數 | 舊專題 4h 設定 | 本輪 5 年資料設定 | 是否調整・理由 |
-| --- | --- | --- | --- |
-| `n_estimators` | 300 | 200 | **已調整**。5 年資料的 walk-forward train 段最大到 35,795 列，早期驗證顯示 200 棵已收斂 |
-| `max_depth` | 3 | 4 | **已調整**。特徵數固定 53，稍深一層換取交互作用表達力 |
-| `learning_rate` | 0.03 | 0.05 | **已調整**，配合較少的樹數 |
-| `subsample` | 未指定 | 0.8 | 新增，降低過擬合 |
-| `colsample_bytree` | 未指定 | 0.8 | 新增 |
-| `objective` ／ `eval_metric` | — | `binary:logistic` ／ `logloss` | — |
-| `tree_method` | — | `hist` | 為 CPU 執行速度 |
-
-> 舊專題出處：`src/multi_horizon_experiment_utils.py` 的 `run_xgboost()` 內建參數，屬「調整後（預測 4、12、24 小時）」實驗設定。
+| 參數 | 本輪 5 年資料設定 | 說明 |
+| --- | --- | --- |
+| `n_estimators` | 200 | 5 年資料的 walk-forward train 段最大到 35,795 列，早期驗證顯示 200 棵已收斂 |
+| `max_depth` | 4 | 特徵數固定 53，稍深一層換取交互作用表達力 |
+| `learning_rate` | 0.05 | 配合較少的樹數 |
+| `subsample` | 0.8 | 降低過擬合 |
+| `colsample_bytree` | 0.8 | — |
+| `objective` ／ `eval_metric` | `binary:logistic` ／ `logloss` | — |
+| `tree_method` | `hist` | 為 CPU 執行速度 |
 
 ### 4.2 LSTM
 
-| 參數 | 舊專題 4h 設定 | 本輪 5 年資料設定 | 是否調整・理由 |
-| --- | --- | --- | --- |
-| 框架 | TensorFlow／Keras | **PyTorch** | **已調整**。新專題統一改用 PyTorch（torch 2.14.0+cu126） |
-| `sequence_length` | 24（default） | 24 | 未調整 |
-| 隱藏單元 | `lstm_units=64`（default） | `hidden_size=32` | **已調整**。53 特徵 × 24 步的樣本下 64 單元容易過擬合；SOL 雜訊高，縮小容量更保守 |
-| 網路結構 | LSTM(64) → Dropout(0.20) → Dense(32, relu) → Dropout(0.10) → Dense(1, sigmoid) | `nn.LSTM(53→32)` → `Linear(32,1)` | **已調整**。簡化為單層，避免在弱訊號上疊加不可解釋的容量 |
-| Loss／Optimizer | `binary_crossentropy`／Adam(1e-3, clipnorm=1.0) | `BCEWithLogitsLoss`／Adam(1e-3) | 等價 |
-| Epochs | 15（固定） | `max_epochs=30` + `patience=5` early stopping | **已調整**，改由 validation loss 決定停點 |
-| `batch_size` | 64 | 128 | **已調整** |
-
-> 舊專題出處：`DEFAULT_MODEL_CONFIG`（`src/multi_horizon_experiment_utils.py:41`）與 `build_lstm_model()`。**SOL 在舊專題 4h 沒有 per-symbol override**，走 default（`sequence_length=24`、`lstm_units=64`）；舊專題僅對 BTC 4h 設過 override（`sequence_length=12`、`lstm_units=32`）。本輪採用的 32 單元即沿用該 override 的容量設定，但序列長度維持 24。
+| 參數 | 本輪 5 年資料設定 | 說明 |
+| --- | --- | --- |
+| 框架 | **PyTorch** | 新專題統一改用 PyTorch（torch 2.14.0+cu126） |
+| `sequence_length` | 24 | — |
+| 隱藏單元 | `hidden_size=32` | 53 特徵 × 24 步的樣本下 64 單元容易過擬合；SOL 雜訊高，縮小容量更保守 |
+| 網路結構 | `nn.LSTM(53→32)` → `Linear(32,1)` | 簡化為單層，避免在弱訊號上疊加不可解釋的容量 |
+| Loss／Optimizer | `BCEWithLogitsLoss`／Adam(1e-3) | — |
+| Epochs | `max_epochs=30` + `patience=5` early stopping | 改由 validation loss 決定停點 |
+| `batch_size` | 128 | — |
 
 ### 4.3 Transformer
 
-| 參數 | 舊專題 4h 設定 | 本輪 5 年資料設定 | 是否調整・理由 |
-| --- | --- | --- | --- |
-| 框架 | TensorFlow／Keras（`src/train_week5_transformer.py`） | **PyTorch** | **已調整** |
-| `sequence_length` | 24（default） | 24 | 未調整 |
-| `d_model` | 64（default） | 32 | **已調整**，與 LSTM 同步縮小容量 |
-| `ff_dim` | 128（default） | 64（`dim_feedforward = hidden_size * 2`） | **已調整**，維持 2× 比例 |
-| `num_heads` | `NUM_HEADS`（`d_model` 須整除） | 4（key dim = 32 / 4 = 8） | — |
-| Encoder 層數 | `NUM_ENCODER_BLOCKS` | **1** | 簡化 |
-| 位置編碼 | `layers.Embedding` 學習式 | 學習式 `nn.Parameter(1, 24, 32)` | 等價 |
-| `dropout` | 0.20 | `TransformerEncoderLayer` 預設 | 未特別調整 |
-| 輸出 | 序列聚合後 Dense(1) | 取**最後一個 timestep** → `Linear(32,1)` | 與 LSTM 取最後隱藏狀態一致 |
-
-> 舊專題出處：`src/train_week5_transformer.py` 的 `build_transformer_model()` 與 `DEFAULT_MODEL_CONFIG`。SOL 在舊專題 4h 同樣沒有 override，走 default（`d_model=64`、`ff_dim=128`）。
+| 參數 | 本輪 5 年資料設定 | 說明 |
+| --- | --- | --- |
+| 框架 | **PyTorch** | — |
+| `sequence_length` | 24 | — |
+| `d_model` | 32 | 與 LSTM 同步縮小容量 |
+| `ff_dim` | 64（`dim_feedforward = hidden_size * 2`） | 維持 2× 比例 |
+| `num_heads` | 4（key dim = 32 / 4 = 8） | — |
+| Encoder 層數 | **1** | 簡化 |
+| 位置編碼 | 學習式 `nn.Parameter(1, 24, 32)` | — |
+| `dropout` | `TransformerEncoderLayer` 預設 | 未特別調整 |
+| 輸出 | 取**最後一個 timestep** → `Linear(32,1)` | 與 LSTM 取最後隱藏狀態一致 |
 
 ## 5. 訓練與驗證方法（walk-forward 與防洩漏）
 
@@ -163,16 +157,15 @@
 
 ### 6.2 次要指標（Sharpe、最大回撤）— 需補程式，列為待辦
 
-舊專題 [xgboost_vs_lstm_comparison.md](xgboost_vs_lstm_comparison.md) 的呈現方式（幣種 × 模型 × Accuracy／F1／Log loss／策略報酬／Sharpe／最大回撤）**新專題尚未實作**。
+交易面指標（幣種 × 模型 × Accuracy／F1／Log loss／策略報酬／Sharpe／最大回撤）**尚未實作**。
 
-- 可重用的實作：`src/lstm_experiment_utils.py:267` 的 `strategy_metrics(y_proba, future_log_returns, threshold)`，已回傳 `strategy_total_return`、`strategy_sharpe`（年化係數 `sqrt(24*365)`）、`max_drawdown`。
 - 資料已具備：`data/features/sol_4h.csv` 已含 `future_log_return` 欄。
 - 待辦：把 `strategy_metrics()` 接進 `scripts/btc_4h_evaluation.py` 的 fold 報告，輸出到既有的比較 JSON。
 
 **使用限制（必須寫進報告）**：
 
 1. **未納入手續費與滑價**，不得解讀為可交易績效。
-2. 目前訊號在 ROC-AUC 0.50–0.53，**交易面指標不得作為選模依據**——在近乎隨機的排序上，Sharpe 主要反映 test 期的市場走向與雜訊，而非模型能力。SOL 波動大，這個風險又比其他幣更高：舊專題 3 年資料的 SOL-XGBoost 曾出現 Sharpe 2.0014 的「好看」數字，但同期 Accuracy 只有 0.5114。
+2. 目前訊號在 ROC-AUC 0.50–0.53，**交易面指標不得作為選模依據**——在近乎隨機的排序上，Sharpe 主要反映 test 期的市場走向與雜訊，而非模型能力。SOL 波動大，這個風險又比其他幣更高。
 3. 僅作為「若強行交易會發生什麼」的敘述性補充。
 
 ### 6.3 共同基準組
@@ -204,18 +197,6 @@ BTC 已於 2026-08-19 選定 **Transformer** 為定案模型，**不再重新訓
 
 SOL 三個模型都比 BTC 低約 0.02，且全部在 0.51 以下——這是四幣中訊號最弱的一個。
 
-### 7.2 對照舊專題 3 年資料（SOL 4h 分類）
-
-| 模型 | Accuracy | F1 | Log loss |
-| --- | ---: | ---: | ---: |
-| XGBoost | 0.4931 | 0.4592 | 0.7098 |
-| LSTM | 0.5169 | 0.4316 | 0.7061 |
-| Transformer | 0.5061 | 0.5090 | 0.7031 |
-
-> 來源：`models/調整後(預測4,12,24小時)/{xgboost,lstm,transformer}/classification/metrics_summary.csv`（3 年資料、5 folds、`TEST_SIZE=720`、`GAP=24`）
-
-**比較的正確寫法**：兩階段的切分設定不同（3 年用 5 folds × 720 列、24 列 gap；5 年用 3 folds × 4,000 列），**數字不可直接相減**。可以說的是「兩個資料期間、兩套獨立實作下，SOL 4h 的方向訊號都在隨機附近（3 年資料的 XGBoost Accuracy 甚至低於 0.50）」，這支持「SOL 訊號薄弱不是單一資料期間的偶然」。舊專題的 `xgboost_vs_lstm_comparison.md` 也記錄過「SOL 的基準 LSTM 不適合作為首選」，與本階段結果方向一致。
-
 ### 7.3 SOL 兩個版本的數字對照（引用時必須指明版本）
 
 | 版本 | 資料 | XGBoost | LSTM | Transformer |
@@ -240,7 +221,7 @@ SOL 三個模型都比 BTC 低約 0.02，且全部在 0.51 以下——這是四
 | 9 | **SOL 缺鏈上資料** | Coin Metrics community 版無 SOL 鏈上指標，外部欄位只有 13 個 | 跨幣種比較表必須註明；不得把 SOL 與 BTC／ETH 的外部實驗當作同等條件 |
 | 10 | **交易面指標未實作** | 見 6.2 | 列為本輪待辦；若 9/30 前來不及則移入「未來工作」，不得為此延後報告 |
 
-**明確排除在本輪之外（寫成「未來工作」）**：三段式目標（`cost_aware_target`，`src/lstm_experiment_utils.py:140`）、特徵／標籤漂移深入檢驗、Stacking 融合、1h／12h／24h 建模、外部訊號再實驗。
+**明確排除在本輪之外（寫成「未來工作」）**：三段式目標、特徵／標籤漂移深入檢驗、Stacking 融合、1h／12h／24h 建模、外部訊號再實驗。
 
 ## 9. 時程規劃
 
@@ -275,10 +256,6 @@ SOL 三個模型都比 BTC 低約 0.02，且全部在 0.51 以下——這是四
 
 - [agement.md](../agement.md)：研究範圍權威文件
 - [時程.md](../時程.md)：階段排程
-- [整合說明_舊專題參考.md](整合說明_舊專題參考.md)：舊專題（3 年）與新專題（5 年）的關係
 - [feature_engineering.md](feature_engineering.md)：特徵與標籤定義
-- [multi_horizon_experiment_guide.md](multi_horizon_experiment_guide.md)：舊專題逐幣種逐 horizon 參數設定
-- [xgboost_vs_lstm_comparison.md](xgboost_vs_lstm_comparison.md)：交易面指標的呈現格式
-- [final_model_comparison_and_conclusion.md](final_model_comparison_and_conclusion.md)：舊專題 3 年資料總結論（分類優於回歸）
 - [external_features_ab_comparison.md](external_features_ab_comparison.md)：外部訊號的否定結果
 - [eth_4h_training_plan.md](eth_4h_training_plan.md)：ETH 同格式計劃書（前一階段）
