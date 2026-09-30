@@ -23,7 +23,7 @@
 
 為什麼分開：`data/`、`logs/`、`models/live/` 合計約 2 GB，放進 git 會讓每次 clone 都要下載，而且這些資料已經定案、不需要版本控制，所以 `.gitignore` 排除了它們。**只 clone 程式碼的話，看不到任何實驗結果，驗證程式也跑不了**，一定要解壓資料壓縮檔。
 
-資料壓縮檔的 SHA-256：`7ddbb63e8657ff95bc506c8bacf7f0d0129d9a7aa6aba326d12ab97201546c0b`。收到後可以先用 `Get-FileHash 專題_資料_2026-09-30.zip -Algorithm SHA256` 比對，確認檔案沒有傳壞。
+資料壓縮檔的 SHA-256：`c4853476d46f634178c437fdc16c2b5d5251c273ea6caed01d67c06ad3927cfb`。收到後可以先用 `Get-FileHash 專題_資料_2026-09-30.zip -Algorithm SHA256` 比對，確認檔案沒有傳壞。
 
 
 不需要、也不在任何地方提供的東西：
