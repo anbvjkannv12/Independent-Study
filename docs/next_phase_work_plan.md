@@ -337,6 +337,10 @@ JSON 必須記錄：git revision、輸入 CSV 的 SHA-256、Python 與 xgboost �
 
 ## 工作 B：持續更新資料與前向測試流程
 
+> **實作說明（2026-09-30）**：B-2～B-8 合併實作為單一檔案 `scripts/live_pipeline.py` 的四個子指令（`init`、`update`、`retrain`、`status`），排程入口為 `scripts/live_run.ps1`；測試在 `tests/test_live_pipeline.py`。`feature_engineering.add_features` 新增預設關閉的 `keep_unlabeled` 參數，實驗用的輸出不變。
+>
+> **查核發現**：`data/features/*_4h.csv` 是用較舊的特徵程式產生的。舊版在零成交量的補值列會產生無限大值而刪除該列，目前版本已修正，因此用現行程式重建會多出約 40 列（2021～2023 年的補值列）。2026-08-02 以後兩者逐列一致（差距 ≤ 1e-9），不影響線上預測；凍結模型仍以原特徵檔訓練。工作 C 的預先登記需註明這一點。
+
 ### B.1 目的
 
 1. 讓資料與模型自動跟上新行情，之後網頁可以直接讀取預測結果。

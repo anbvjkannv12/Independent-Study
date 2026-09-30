@@ -11,3 +11,4 @@ data/
 logs/
 artifacts/
 .venv/
+models/live/

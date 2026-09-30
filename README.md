@@ -20,7 +20,7 @@
 
 BTC 已定案為 Transformer，不再重新訓練；ETH／SOL／XRP 的 4 小時三模型重跑與定案檢視已完成，結論皆偏向「無可靠優勝模型」。四幣種總報告、多視窗比較（僅 XRP 1h 通過，列為候選假說）、重訓頻率實驗（無任何組通過）與三段式目標實驗（四幣種扣手續費後皆為負報酬，無幣種通過）皆已完成，詳見 [docs/five_year_4h_final_report.md](docs/five_year_4h_final_report.md)。
 
-## 下一步：持續更新資料與前向測試
+## 持續更新資料與前向測試（已上線，2026-09-30）
 
 完整執行步驟見 [docs/next_phase_work_plan.md](docs/next_phase_work_plan.md)（工作 A：三段式目標；工作 B：本節流程）。目標是讓資料與模型自動跟上新行情，同時累積 2026-08-09 之後、模型從未看過的預測紀錄，供新資料獨立驗證（最早 2027-01-25）使用。
 
@@ -29,6 +29,17 @@ BTC 已定案為 Transformer，不再重新訓練；ETH／SOL／XRP 的 4 小時
 3. **排程**：本地用 Windows 工作排程器；日後架網頁時，排程搬到雲端（選非美國區域，Binance 會擋美國 IP），網頁只讀預測結果、不跑模型。
 4. **獨立性規則**：2027-01-25 前只收資料與記錄預測，**不得**用新資料調參、換特徵或改判定規則。
 5. **1h 候選的檢查重點**：XGBoost 是否勝過反向 persistence（排除只是短期反轉）、扣手續費後是否仍有優勢。
+
+實作在 `scripts/live_pipeline.py`（資料寫入 `data/live/`、模型 `models/live/`、預測與執行紀錄 `logs/live/`，皆不進 git；不會改動 `data/raw`、`data/processed`、`data/features`）：
+
+```powershell
+& ".venv-transformer\Scripts\python.exe" scripts\live_pipeline.py init     # 只做一次：複製歷史資料、訓練凍結模型與第一個滾動模型
+& ".venv-transformer\Scripts\python.exe" scripts\live_pipeline.py update   # 每小時：抓新 K 線、補值、特徵一致性檢查、預測、回填標籤
+& ".venv-transformer\Scripts\python.exe" scripts\live_pipeline.py retrain  # 每月：訓練新的滾動模型
+& ".venv-transformer\Scripts\python.exe" scripts\live_pipeline.py status   # 檢查資料新鮮度與凍結模型近 30 天 AUC（僅描述）
+```
+
+排程由 Windows 工作排程器呼叫 `scripts\live_run.ps1 update`（每小時）與 `scripts\live_run.ps1 retrain`（每月 1 日）。Binance 端點被擋時加 `--base-url https://data-api.binance.vision`。
 
 ## 快速開始
 

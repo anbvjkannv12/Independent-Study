@@ -108,8 +108,11 @@ def _prepare_raw(raw: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def add_features(raw: pd.DataFrame, prediction_horizon: int = 1) -> pd.DataFrame:
-    """Build the original project's 53 features and two target columns."""
+def add_features(raw: pd.DataFrame, prediction_horizon: int = 1, keep_unlabeled: bool = False) -> pd.DataFrame:
+    """Build the original project's 53 features and two target columns.
+
+    keep_unlabeled keeps the newest rows whose label is not known yet (live prediction).
+    """
     if prediction_horizon < 1:
         raise ValueError("prediction_horizon must be a positive integer.")
 
@@ -181,6 +184,8 @@ def add_features(raw: pd.DataFrame, prediction_horizon: int = 1) -> pd.DataFrame
     dataset = df[[*EXPECTED_FEATURE_NAMES, "future_log_return", "target_up"]].replace(
         [np.inf, -np.inf], np.nan
     )
+    if keep_unlabeled:
+        return dataset.dropna(subset=list(EXPECTED_FEATURE_NAMES))
     return dataset.dropna()
 
 
