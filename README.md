@@ -108,7 +108,7 @@ models/              模型、指標、validation report 與 manifest
 logs/                下載、品質、補值、特徵與比較結果 JSON
 docs/                方法論、各幣種比較文件與專題報告
 deps/                離線 wheel 與本地 XGBoost runtime
-舊專題_3年資料/        前一階段（3 年資料）的 notebook
+舊專題_3年資料/        前一階段（3 年資料）的 notebook（不在 GitHub，僅保存在原作者電腦）
 ```
 
 ## 文件索引

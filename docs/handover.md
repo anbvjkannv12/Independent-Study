@@ -18,7 +18,7 @@
 
 | 部分 | 內容 | 取得方式 |
 |---|---|---|
-| **GitHub repo** | 所有程式碼、文件、報告初稿、圖表、`.ptl` 與小型模型、完整 git 歷史 | `git clone` |
+| **GitHub repo** | 所有程式碼、文件、報告初稿、圖表、4h 實驗程式與小型設定檔、完整 git 歷史（不含 3 年資料階段的模型與資料） | `git clone` |
 | **資料壓縮檔** `專題_資料_2026-09-30.zip`（約 667 MB） | `data/`（原始、補值後、特徵、外部、即時更新資料，解壓後約 1.8 GB）、`logs/`（所有實驗結果，約 210 MB）、`models/live/`（凍結與滾動模型）、`data_manifest.json`（每個檔案的 SHA-256） | 原作者另外提供（例如雲端硬碟） |
 
 為什麼分開：`data/`、`logs/`、`models/live/` 合計約 2 GB，放進 git 會讓每次 clone 都要下載，而且這些資料已經定案、不需要版本控制，所以 `.gitignore` 排除了它們。**只 clone 程式碼的話，看不到任何實驗結果，驗證程式也跑不了**，一定要解壓資料壓縮檔。
@@ -125,11 +125,10 @@
 
 | 模型 | 位置 | 格式 | 說明 |
 |---|---|---|---|
-| BTC 24h PyTorch Transformer | `models/btc_24h_pytorch_transformer/checkpoints/` | `.pth`（權重）＋ `.pkl`（前處理設定） | 5 個 fold 與 final，各一組；`smoke_test/` 是測試用小模型。載入方式見 `src/pytorch_transformer_artifacts.py` |
+| BTC 24h PyTorch Transformer（`.pth`、`.pkl`、`.ptl`） | `models/btc_24h_pytorch_transformer/checkpoints/` | — | （3 年資料階段，依原作者決定不放在 GitHub，也不在資料壓縮檔；原作者電腦仍保有，需要時向原作者索取） |
 | 凍結 4h XGBoost（四幣種） | `models/live/*_4h_frozen.json` | XGBoost JSON | **工作 8 的驗證依據，不可重訓或覆寫**；SHA-256 在 `models/live/frozen_manifest.json` |
 | 滾動 4h XGBoost（四幣種） | `models/live/*_4h_rolling_*.json` ＋ `.meta.json` | XGBoost JSON | 前向測試用，meta 記錄訓練範圍 |
-| 熱門幣模型（舊專題流程） | `models/popular_coins/` | `.npz` ＋ metrics JSON | 由 `src/train_popular_coins.py` 產生 |
-| 3 年資料階段模型與結果 | `models/week3_naive_xgboost/`、`models/week4_lstm/`、`models/week5_transformer/`、`models/調整後(預測4,12,24小時)/` | 多為結果 CSV／JSON | 歷史參考 |
+| 3 年資料階段其他模型與結果 | `models/popular_coins/`、`models/week3～5*/`、`models/smoke_test_new_plan*/`、`models/調整後(預測4,12,24小時)/` | — | （3 年資料階段，依原作者決定不放在 GitHub，也不在資料壓縮檔；原作者電腦仍保有，需要時向原作者索取） |
 
 **注意**：4h 三模型比較（XGBoost／LSTM／Transformer 的 walk-forward）與之後的預先登記實驗，**程式設計上不儲存模型權重**，只儲存逐列預測與結果 JSON（在 `logs/`）。要取得權重必須重新訓練；結果可重現，因為 seed 固定。
 
@@ -196,7 +195,7 @@
 | `logs/` | 所有實驗結果 | 報告的每個數字都來自這裡 |
 | `models/live/` | 凍結模型與滾動模型 | **凍結模型永遠不可重新訓練或覆寫** |
 | `run/` | 早期的執行用 notebook | |
-| `舊專題_3年資料/` | 前一階段（3 年資料）的 notebook | 歷史參考 |
+| `舊專題_3年資料/` | 前一階段（3 年資料）的 notebook | （3 年資料階段，依原作者決定不放在 GitHub，也不在資料壓縮檔；原作者電腦仍保有，需要時向原作者索取） |
 
 ### 5.3 主要程式
 
@@ -231,6 +230,7 @@
 | 新資料獨立驗證 | **2027-01-25 之後** | 見 `final_stage_work_plan.md` 工作 8；波動大小預測也應一起驗證 |
 
 ### 6.1 `.ptl` 模型檔（已完成，2026-09-30）
+> **注意**：BTC 24h Transformer 的 `.pth`、`.pkl`、`.ptl` 屬於 3 年資料階段，已從 GitHub 移除，也不在資料壓縮檔。repo 裡仍有匯出與驗證程式（`scripts/export_btc_24h_ptl.py`、`scripts/verify_btc_24h_ptl.py`）和說明文件，但要先向原作者取得模型檔，放回 `models/btc_24h_pytorch_transformer/checkpoints/` 才能執行。
 
 完整步驟見 **[`docs/ptl_guide.md`](ptl_guide.md)**（匯出程式、驗證程式、Python／Android／iOS 執行方式、輸入資料準備、常見問題）。重點：
 

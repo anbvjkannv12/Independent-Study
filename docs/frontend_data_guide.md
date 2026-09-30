@@ -27,7 +27,7 @@
 │  └─ feature_manifest.json       53 個特徵名稱
 ├─ models/
 │  ├─ live/                       4h XGBoost：凍結模型、滾動模型與 meta
-│  └─ btc_24h_pytorch_transformer/checkpoints/
+│  └─ btc_24h_pytorch_transformer/checkpoints/   ← 3 年資料階段的模型，只在本資料包提供，GitHub 沒有
 │     ├─ btc_24h_final.ptl        行動端模型
 │     ├─ btc_24h_final.ptl.json   .ptl 輸入輸出規格
 │     └─ btc_24h_final.pth / .pkl 原始 PyTorch 權重與前處理設定

@@ -1,4 +1,5 @@
 # BTC 24h Transformer 轉成 `.ptl` 與執行說明
+> **2026-09-30 注意**：本文件使用的模型檔（`btc_24h_final.pth`、`.pkl`、`.ptl`、`.ptl.json`）屬於 3 年資料階段，依原作者決定**不放在 GitHub，也不在資料壓縮檔**。從 GitHub clone 的專案沒有這些檔案；需要時請向原作者索取，放回 `models/btc_24h_pytorch_transformer/checkpoints/` 後再照本文件操作。
 
 > 撰寫日期：2026-09-30  
 > 狀態：**已於 2026-09-30 在本機執行完成並通過驗證。**由於目前 Windows torch build 沒有 XNNPACK，匯出程式會自動跳過 `optimize_for_mobile`，但 `.ptl` 已可由 lite interpreter 載入，且和原模型輸出一致。  
